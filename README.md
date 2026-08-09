@@ -34,10 +34,13 @@ every push, so the configuration here cannot silently rot.
    its own dependencies — no `uv sync` needed first. It infers the project name
    and owner from the git remote, prompts for anything missing, rewrites every
    reference to the template across the tracked files, renames
-   `src/python_package_template/`, replaces this README, and then deletes
-   itself. Pass `--name`/`--owner`/`--description`/`--package` to skip the
-   prompts, `--yes` to skip confirmation, and `--dry-run` to see what it would
-   touch.
+   `src/python_package_template/`, replaces this README, sets the copyright
+   line from the owner and the current year, and then deletes itself. Pass
+   `--name`/`--owner`/`--description`/`--package` to skip the prompts, `--yes`
+   to skip confirmation, and `--dry-run` to see what it would touch.
+
+   It refuses to run on a dirty working tree (`--force` overrides), because
+   inspecting `git diff` afterwards is the only check on what it did.
 
 3. `uv sync` to build the environment and regenerate `uv.lock` under the new
    name, then `just` to check everything passes.
