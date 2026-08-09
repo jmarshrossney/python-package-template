@@ -27,18 +27,20 @@ every push, so the configuration here cannot silently rot.
 2. Clone it, then run the one-off rename:
 
    ```sh
-   uv sync
-   just bootstrap
+   uv run bootstrap.py
    ```
 
-   This infers the project name and owner from the git remote, prompts for a
-   description, rewrites every reference to the template, renames
-   `src/python_package_template/`, replaces this README, and then deletes both
-   itself and the `bootstrap` recipe. Pass `--name`/`--owner`/`--description`
-   to skip the prompts, and `--yes` to skip confirmation.
+   It's a [PEP 723](https://peps.python.org/pep-0723/) script, so uv installs
+   its own dependencies — no `uv sync` needed first. It infers the project name
+   and owner from the git remote, prompts for anything missing, rewrites every
+   reference to the template across the tracked files, renames
+   `src/python_package_template/`, replaces this README, and then deletes
+   itself. Pass `--name`/`--owner`/`--description`/`--package` to skip the
+   prompts, `--yes` to skip confirmation, and `--dry-run` to see what it would
+   touch.
 
-3. `uv sync` again to regenerate `uv.lock` under the new name, then `just` to
-   check everything still passes.
+3. `uv sync` to build the environment and regenerate `uv.lock` under the new
+   name, then `just` to check everything passes.
 4. Enable Pages: **Settings → Pages → Source: GitHub Actions**.
 5. To publish to PyPI, create `pypi` and `testpypi` environments in the repo
    settings and register a pending trusted publisher on each index. See the
@@ -66,7 +68,7 @@ just docs-serve       # the same, with a live-reloading local server
 - **Explicit `ruff` `select`.** Ruff 0.16 broadened its default rule set; the
   template selects rules explicitly so a version bump can't change what's
   enforced. Docstrings (`D`, google convention) are required in `src/`, and
-  exempted in `tests/`, `scripts/` and `examples/`.
+  exempted in `tests/` and `examples/`.
 - **`exclude-newer = "1 week"`** in `[tool.uv]`, so a release published today
   can't break a fresh `uv sync`. Override per package with
   `exclude-newer-package`.

@@ -86,9 +86,8 @@ select = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Exempt tests and dev scripts from docstring requirements.
+# Exempt tests from docstring requirements.
 "tests/**" = ["D", "E501"]
-"scripts/**" = ["D"]
 # Marimo notebooks are generated dataflow descriptions, not hand-written
 # modules, so several rules encode assumptions that are false for them:
 #   B018    a bare trailing expression IS the cell's output mechanism.

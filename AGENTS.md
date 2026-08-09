@@ -13,7 +13,7 @@ src/python_package_template/
 tests/             — one test file per module
 examples/          — marimo notebooks, exported into docs/ by `just docs`
 docs/              — hand-written Markdown + generated example.md
-scripts/           — bootstrap.py, deleted by `just bootstrap`
+bootstrap.py       — one-off template rename (PEP 723 script; deletes itself)
 site/              — built documentation output (gitignored)
 ```
 
@@ -43,7 +43,7 @@ uv (packaging), just (tasks), ruff (format + lint), pyright (types), pytest (tes
 ## Conventions
 
 - Ruff `select` is explicit, never left to defaults — see the comment in `pyproject.toml`.
-- Docstrings are required in `src/` (google convention) and exempt in `tests/`, `scripts/` and `examples/`.
+- Docstrings are required in `src/` (google convention) and exempt in `tests/` and `examples/`.
 - `docs/example.md` and `docs/figures/` are **generated**; edit `examples/notebook.py` instead.
 - Tool versions are pinned in three places that must stay in step: `[dependency-groups] dev`, `.pre-commit-config.yaml` revs, and the `uv_build` bound in `[build-system]`.
 

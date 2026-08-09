@@ -62,11 +62,3 @@ docs-examples:
 # Serve the documentation locally with live reload.
 docs-serve: docs-examples
   zensical serve
-
-# --- template bootstrap (this block is removed by `just bootstrap`) ---
-
-# Rename this template to a real project. Infers owner/repo from the git remote.
-bootstrap *args:
-  python3 scripts/bootstrap.py {{args}}
-
-# --- end template bootstrap ---
