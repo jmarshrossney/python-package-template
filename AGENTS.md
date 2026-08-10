@@ -47,3 +47,4 @@ Bump the minor when questions are added, renamed, or removed because `copier upd
 - When `with_license` is false, keep `license = "LicenseRef-TODO-CHOOSE-A-LICENSE"` valid SPDX so `uv sync` and `uv build` continue to work.
 - Copier cannot access `git config`, so `author_name` and `author_email` need explicit answers or `--data` values.
 - Jinja has no `re`; keep `package_name` sanitisation as chained `.replace()` calls with `.isidentifier()` validation.
+- `_tasks` re-run on `copier update`, so every task must be idempotent or guarded.
