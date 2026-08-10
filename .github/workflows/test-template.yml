@@ -29,8 +29,8 @@ jobs:
         variant: [full]
         python-version: ["3.12", "3.13", "3.14"]
         include:
-          # Both feature flags off, and no license: a different set of files
-          # exists, so it needs its own render.
+          # Both feature flags off: a different set of files exists, so it
+          # needs its own render.
           - variant: minimal
             python-version: "3.12"
     steps:
@@ -45,9 +45,9 @@ jobs:
       - name: Render
         run: |
           if [ "${{ matrix.variant }}" = "full" ]; then
-            FLAGS="--data with_pypi=true --data with_cli=true --data license=MIT"
+            FLAGS="--data with_pypi=true --data with_cli=true"
           else
-            FLAGS="--data with_pypi=false --data with_cli=false --data license=none"
+            FLAGS="--data with_pypi=false --data with_cli=false"
           fi
           uvx copier copy --defaults --trust \
             --data project_name=demo-pkg \
@@ -99,17 +99,17 @@ jobs:
       - name: Assert conditional files match the answers
         working-directory: ${{ runner.temp }}/rendered
         run: |
+          # No LICENSE in either variant: the template deliberately does not
+          # choose a license, so it must never generate one.
+          test ! -e LICENSE
           if [ "${{ matrix.variant }}" = "full" ]; then
             test -f .github/workflows/publish.yml
             test -f src/demo_pkg/cli.py
             test -f tests/test_cli.py
-            test -f LICENSE
           else
             test ! -e .github/workflows/publish.yml
             test ! -e src/demo_pkg/cli.py
             test ! -e tests/test_cli.py
-            test ! -e LICENSE
-            ! grep -q '^license' pyproject.toml
           fi
 
       - name: Run the generated project's suite

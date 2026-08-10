@@ -42,12 +42,11 @@ the filename:
 ```
 template/.github/workflows/{% if with_pypi %}publish.yml{% endif %}
 template/src/{{ package_name }}/{% if with_cli %}cli.py{% endif %}.jinja
-template/{% if license == 'MIT' %}LICENSE{% endif %}.jinja
+template/tests/{% if with_cli %}test_cli.py{% endif %}.jinja
 ```
 
-This works with and without the `.jinja` suffix. The three `LICENSE` variants
-are mutually exclusive, so at most one is ever created. Prefer this to
-`_exclude`: the condition stays next to the file it governs.
+This works with and without the `.jinja` suffix. Prefer it to `_exclude`: the
+condition stays next to the file it governs.
 
 ## Working on the template
 
@@ -90,8 +89,9 @@ git tag v1.1.0 && git push --tags
 ## Things that do not work in Copier
 
 - **No date function**, and question defaults cannot shell out, so the
-  copyright year cannot be rendered. It is stamped by a post-copy task in
-  `copier.yml`, which replaces a literal `@YEAR@`.
+  copyright year in the docs footer cannot be rendered. It is stamped by a
+  post-copy task in `copier.yml`, which replaces a literal `@YEAR@` in
+  `zensical.toml`.
 - **No `git config` access**, so `author_name` and `author_email` have no
   inferred defaults and must be answered or passed with `--data`.
 - **Jinja has no `re`**, so `package_name`'s default sanitises via chained

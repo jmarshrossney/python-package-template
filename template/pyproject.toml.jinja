@@ -10,10 +10,9 @@ authors = [
     { name = "{{ author_name }}", email = "{{ author_email }}" }
 ]
 readme = "README.md"
-{%- if license != "none" %}
-license = "{{ license }}"
-license-files = ["LICENSE"]
-{%- endif %}
+# No license is generated: pick one, add a LICENSE file, then set (for example)
+#   license = "MIT"
+#   license-files = ["LICENSE"]
 requires-python = ">=3.12"
 {%- if with_cli %}
 dependencies = ["typer>=0.15.0"]

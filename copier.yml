@@ -51,18 +51,8 @@ author_email:
 
 copyright_holder:
   type: str
-  help: Copyright holder — your name, or your employer's if they own the work
+  help: Copyright holder for the docs footer — you, or your employer if they own the work
   default: "{{ author_name }}"
-
-license:
-  type: str
-  help: License
-  default: MIT
-  choices:
-    MIT: MIT
-    Apache 2.0: Apache-2.0
-    BSD 3-Clause: BSD-3-Clause
-    None (all rights reserved): none
 
 with_pypi:
   type: bool
@@ -84,14 +74,13 @@ with_cli:
 
 _tasks:
   # Copier's Jinja environment has no date function and question defaults
-  # cannot shell out, so the year is stamped in after generation rather than
-  # rendered. LICENSE is absent when the license question answered "none".
+  # cannot shell out, so the year in the docs footer is stamped in after
+  # generation rather than rendered.
   - command: >-
       uv run --no-project python -c
       "import datetime, pathlib;
-      year = str(datetime.date.today().year);
-      [p.write_text(p.read_text().replace('@YEAR@', year))
-      for p in map(pathlib.Path, ['LICENSE', 'zensical.toml']) if p.exists()]"
+      p = pathlib.Path('zensical.toml');
+      p.write_text(p.read_text().replace('@YEAR@', str(datetime.date.today().year)))"
 
   # The template ships no uv.lock: it would embed the template's own
   # distribution name. The generated CI runs `uv sync --locked`, so the
@@ -111,6 +100,9 @@ _message_after_copy: |
        `pypi` and `testpypi` environments in the repo settings. See the header
        comment in .github/workflows/publish.yml.
   {%- endif %}
+
+  No LICENSE file is generated — choosing a license is yours to make, not the
+  template's. Add one, and set `license` in pyproject.toml to match.
 
   Then replace the placeholders the template cannot fill in for you:
     - the `lucide/smile` logo in zensical.toml

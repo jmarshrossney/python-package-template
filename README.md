@@ -28,6 +28,16 @@ Commit `uv.lock` — the generated CI runs `uv sync --locked`.
 
 Finally, enable Pages under **Settings → Pages → Source: GitHub Actions**.
 
+### No license is generated
+
+Choosing a license is a decision about your work, not a template setting, so
+the template does not make it for you and does not ship a default. Add a
+`LICENSE` file yourself and set `license` in `pyproject.toml` to match.
+[choosealicense.com](https://choosealicense.com/) is a reasonable starting
+point.
+
+`copyright_holder` is only used for the copyright line in the docs footer.
+
 ### Questions
 
 | Question | Default | Notes |
@@ -38,8 +48,7 @@ Finally, enable Pages under **Settings → Pages → Source: GitHub Actions**.
 | `github_owner` | — | User or organisation |
 | `author_name` | — | |
 | `author_email` | — | |
-| `copyright_holder` | `author_name` | Set this to your employer if they own the work |
-| `license` | `MIT` | MIT, Apache-2.0, BSD-3-Clause, or none |
+| `copyright_holder` | `author_name` | Docs footer; set this to your employer if they own the work |
 | `with_pypi` | `true` | The PyPI publishing workflow |
 | `with_cli` | `false` | A Typer entry point, with tests |
 
