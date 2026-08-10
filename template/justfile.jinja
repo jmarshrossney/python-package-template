@@ -44,11 +44,11 @@ test:
 
 # Run tests with coverage report.
 test-cov:
-  pytest --cov=python_package_template --cov-report=term-missing --cov-fail-under=90
+  pytest --cov={{ package_name }} --cov-report=term-missing --cov-fail-under=90
 
 # Run doctest examples embedded in source docstrings.
 doctest:
-  pytest --doctest-modules src/python_package_template
+  pytest --doctest-modules src/{{ package_name }}
 
 # Export the example notebooks, then build the documentation using Zensical.
 docs: docs-examples

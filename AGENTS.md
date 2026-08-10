@@ -1,66 +1,49 @@
 # AGENTS.md
 
-## Project overview
+`python-package-template` is a [Copier](https://copier.readthedocs.io/) template.
+The generated project lives under `template/`; there is no package to lint or test at the repository root.
 
-`python-package-template` is a GitHub template repository for Python packages.
-It is also a real, working (if trivial) package, so that its own CI exercises every config it ships.
+## Templating Rules
 
-## Source layout
+- Only add `.jinja` to files that contain Jinja substitutions.
+- Files containing GitHub Actions `${{ }}` must remain unsuffixed so Copier does not parse them.
+  If such a file needs substitution, wrap every Actions expression in `{% raw %}…{% endraw %}`.
+- Watch for accidental `{{` in suffixed files, especially LaTeX in Markdown.
+- For feature-dependent files, put the condition in the filename so an empty rendered name omits the file.
+  Prefer this to `_exclude`.
 
+## Verification
+
+Render the template, then run the generated project's suite:
+
+```sh
+uvx copier copy --defaults \
+  --data project_name=demo-pkg \
+  --data project_description="Does a thing." \
+  --data github_owner=someone-else \
+  --data author_name="Ada Lovelace" \
+  --data author_email=ada@example.com \
+  . rendered
+cd rendered && uv sync --group dev && just
 ```
-src/python_package_template/
-  __init__.py      — public API (placeholder: `greet`)
-tests/             — one test file per module
-examples/          — marimo notebooks, exported into docs/ by `just docs`
-docs/              — hand-written Markdown + generated example.md
-bootstrap.py       — one-off template rename (PEP 723 script; deletes itself)
-site/              — built documentation output (gitignored)
-```
 
-## Commands
+`rendered/` and `rendered-*/` are gitignored, and Copier's warning about uncommitted changes is expected.
+Test both `with_pypi`/`with_cli` combinations (both true and both false).
+CI also checks that rendered output contains no Jinja delimiters or `python_package_template`.
+The sole permitted `jmarshrossney` occurrence is the real `marimo-md-export` URL in `examples/notebook.py`.
 
-All via `just`; prefix with `uv run` if `just` isn't on the PATH.
+## Releasing
 
-| Command | What it does |
-|---|---|
-| `just` | lint → typecheck → test → check-examples → docs, in order |
-| `just lint` | `ruff format` + `marimo check --fix` + `ruff check --fix` + `marimo check --strict` |
-| `just lint-check` | Non-mutating variant for CI |
-| `just check-canonical` | Applies `marimo check --fix` and asserts the tree is clean |
-| `just check-examples` | `python examples/notebook.py` — the only gate that executes cells |
-| `just typecheck` | `pyright` |
-| `just test` | `pytest` |
-| `just test-cov` | `pytest` with coverage, `--cov-fail-under=90` |
-| `just doctest` | Doctests in `src/` |
-| `just docs` | Export notebooks, then `zensical build` |
+Copier resolves `gh:` shorthand to the latest PEP 440 git tag, not the default branch.
+Template changes are invisible to users until a new tag exists.
 
-Setup: `uv sync`.
+The template version is unrelated to the generated project's starting version.
+Bump the minor when questions are added, renamed, or removed because `copier update` replays those questions and a rename is breaking.
 
-## Toolchain
+## Copier Constraints
 
-uv (packaging), just (tasks), ruff (format + lint), pyright (types), pytest (tests), zensical + mkdocstrings (docs), marimo + marimo-md-export (example notebooks), pre-commit, GitHub Actions.
-
-## Conventions
-
-- Ruff `select` is explicit, never left to defaults — see the comment in `pyproject.toml`.
-- Docstrings are required in `src/` (google convention) and exempt in `tests/` and `examples/`.
-- `docs/example.md` and `docs/figures/` are **generated**; edit `examples/notebook.py` instead.
-- Tool versions are pinned in three places that must stay in step: `[dependency-groups] dev`, `.pre-commit-config.yaml` revs, and the `uv_build` bound in `[build-system]`.
-
-## marimo ↔ ruff interaction (do not reorder `lint`)
-
-Verified against marimo 0.23.16 / ruff 0.16.1:
-
-- `marimo check --fix` must run **before** `ruff check --fix`. It prunes cell
-  return tuples, which can strand an import; ruff then reports the `F401`. The
-  reverse order needs two passes to reach a fixed point.
-- `marimo check` **without `--strict` exits 0** on runtime, formatting and WASM
-  findings — only a broken dependency graph fails it. Always pass `--strict`.
-- Plain `marimo check` reports *nothing* about non-canonical cell signatures, in
-  either mode. `check-canonical` is the only gate for that.
-- `marimo-md-export` prints an error but **exits 0** and still writes the
-  markdown when a cell raises, so `just docs` is not an execution gate.
-  `check-examples` is.
-- Never enable `PLR1711` for `examples/` — ruff deletes the bare `return`
-  ending each cell and `marimo check --fix` re-adds it, forever. Likewise
-  `E501`: a `# noqa` after the closing `"""` oscillates on whitespace.
+- Keep `_tasks` empty: declaring any makes `--trust` mandatory for every `copy` and `update`, and tasks re-run on update so each would have to be idempotent.
+  The copyright year comes from `{{ "%Y" | strftime }}`, an Ansible filter Copier always loads; the generated project has no `uv.lock` until `uv sync` runs.
+- When `with_license` is false, keep `license = "LicenseRef-TODO-CHOOSE-A-LICENSE"` valid SPDX so `uv sync` and `uv build` continue to work.
+- Copier cannot access `git config`, so `author_name` and `author_email` need explicit answers or `--data` values.
+- Jinja has no `re`; keep `package_name` sanitisation as chained `.replace()` calls with `.isidentifier()` validation.

@@ -1,0 +1,13 @@
+"""Command line interface for {{ project_name }}."""
+
+import typer
+
+from {{ package_name }} import greet
+
+app = typer.Typer(help="{{ project_description }}")
+
+
+@app.command()
+def main(name: str = typer.Argument("world", help="Who to greet.")) -> None:
+    """Print a greeting."""
+    typer.echo(greet(name))

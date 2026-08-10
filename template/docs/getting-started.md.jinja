@@ -2,24 +2,38 @@
 
 ## Installation
 
+{% if with_pypi -%}
 Install from PyPI:
 
 ```sh
-pip install python-package-template
+pip install {{ project_name }}
 ```
 
 Or, if you use [uv](https://docs.astral.sh/uv/), add it to a project:
 
 ```sh
-uv add python-package-template
+uv add {{ project_name }}
 ```
+{%- else -%}
+Install from the repository:
+
+```sh
+pip install git+https://github.com/{{ github_owner }}/{{ project_name }}
+```
+
+Or, if you use [uv](https://docs.astral.sh/uv/), add it to a project:
+
+```sh
+uv add git+https://github.com/{{ github_owner }}/{{ project_name }}
+```
+{%- endif %}
 
 ## First steps
 
 The package exposes a single function:
 
 ```python
-from python_package_template import greet
+from {{ package_name }} import greet
 
 print(greet())  # Hello, world!
 print(greet("reader"))  # Hello, reader!
@@ -36,6 +50,6 @@ $$
 \int_{-\infty}^{\infty} e^{-x^{2}} \, \mathrm{d}x = \sqrt{\pi}
 $$
 
-both render. This section exists so the template's own docs build exercises
-the KaTeX configuration; delete it (and see `zensical.toml`) if the package's
+both render. This section exists so the docs build exercises the KaTeX
+configuration; delete it (and see `zensical.toml`) if this package's
 documentation has no maths in it.

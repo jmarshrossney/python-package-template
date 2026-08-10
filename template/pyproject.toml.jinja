@@ -3,18 +3,29 @@ requires = ["uv_build>=0.11.17,<0.12.0"]
 build-backend = "uv_build"
 
 [project]
-name = "python-package-template"
+name = "{{ project_name }}"
 version = "0.1.0"
-description = "A template for Python packages built with uv, just, ruff, pyright, pytest and zensical."
+description = "{{ project_description }}"
 authors = [
-    { name = "Joe Marsh Rossney", email = "17361029+jmarshrossney@users.noreply.github.com" }
+    { name = "{{ author_name }}", email = "{{ author_email }}" }
 ]
 readme = "README.md"
+{%- if with_license %}
 license = "MIT"
 license-files = ["LICENSE"]
+{%- else %}
+# No license has been chosen yet. This placeholder is a valid SPDX expression,
+# so the package still builds, but it appears verbatim in the built metadata
+# and on PyPI. Add a LICENSE file and replace this with its SPDX identifier.
+license = "LicenseRef-TODO-CHOOSE-A-LICENSE"
+{%- endif %}
 requires-python = ">=3.12"
+{%- if with_cli %}
+dependencies = ["typer>=0.15.0"]
+{%- else %}
 dependencies = []
-keywords = ["template"]
+{%- endif %}
+keywords = []
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
@@ -24,14 +35,13 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://jmarshrossney.github.io/python-package-template"
-Repository = "https://github.com/jmarshrossney/python-package-template"
-Documentation = "https://jmarshrossney.github.io/python-package-template"
-
-# Uncomment to ship a command line entry point.
-# [project.scripts]
-# python-package-template = "python_package_template.cli:app"
-
+Homepage = "https://{{ github_owner|lower }}.github.io/{{ project_name }}"
+Repository = "https://github.com/{{ github_owner }}/{{ project_name }}"
+Documentation = "https://{{ github_owner|lower }}.github.io/{{ project_name }}"
+{% if with_cli %}
+[project.scripts]
+{{ project_name }} = "{{ package_name }}.cli:app"
+{% endif %}
 [dependency-groups]
 dev = [
     "pre-commit>=4.6.1",
@@ -113,8 +123,10 @@ select = [
     "PLR1711",
     "PLC0415",
 ]
+{%- if with_cli %}
 # Typer CLI modules use typer.Option()/Argument() in signature defaults.
-# "src/python_package_template/cli/**" = ["B008"]
+"src/{{ package_name }}/cli.py" = ["B008"]
+{%- endif %}
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -125,6 +137,7 @@ convention = "google"
 # [dependency-groups] must be at or below the version that existed a week ago,
 # or resolution fails outright.
 exclude-newer = "1 week"
-# Exempt our own packages from the cutoff -- we want their latest release
-# immediately, and we control what lands in them.
+# Exempt marimo-md-export from the cutoff: it is the one dependency here whose
+# releases are worth picking up the day they land, because the docs export
+# depends on it closely.
 exclude-newer-package = { marimo-md-export = false }
