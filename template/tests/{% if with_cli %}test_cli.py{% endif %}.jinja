@@ -1,0 +1,17 @@
+from typer.testing import CliRunner
+
+from {{ package_name }}.cli import app
+
+runner = CliRunner()
+
+
+def test_cli_default():
+    result = runner.invoke(app, [])
+    assert result.exit_code == 0
+    assert "Hello, world!" in result.stdout
+
+
+def test_cli_name():
+    result = runner.invoke(app, ["reader"])
+    assert result.exit_code == 0
+    assert "Hello, reader!" in result.stdout

@@ -2,18 +2,19 @@
 
 ## Project overview
 
-`python-package-template` is a GitHub template repository for Python packages.
-It is also a real, working (if trivial) package, so that its own CI exercises every config it ships.
+`{{ project_name }}` — {{ project_description }}
 
 ## Source layout
 
 ```
-src/python_package_template/
+src/{{ package_name }}/
   __init__.py      — public API (placeholder: `greet`)
+{%- if with_cli %}
+  cli.py           — Typer entry point
+{%- endif %}
 tests/             — one test file per module
 examples/          — marimo notebooks, exported into docs/ by `just docs`
 docs/              — hand-written Markdown + generated example.md
-bootstrap.py       — one-off template rename (PEP 723 script; deletes itself)
 site/              — built documentation output (gitignored)
 ```
 
@@ -46,6 +47,12 @@ uv (packaging), just (tasks), ruff (format + lint), pyright (types), pytest (tes
 - Docstrings are required in `src/` (google convention) and exempt in `tests/` and `examples/`.
 - `docs/example.md` and `docs/figures/` are **generated**; edit `examples/notebook.py` instead.
 - Tool versions are pinned in three places that must stay in step: `[dependency-groups] dev`, `.pre-commit-config.yaml` revs, and the `uv_build` bound in `[build-system]`.
+
+## This project was generated from a template
+
+The answers are in `.copier-answers.yml`. `copier update` pulls later template
+changes in; it uses that file to replay the original answers, so keep it
+committed and don't hand-edit it.
 
 ## marimo ↔ ruff interaction (do not reorder `lint`)
 

@@ -1,6 +1,8 @@
-# python-package-template
+# {{ project_name }}
 
-A template for Python packages built with
+{{ project_description }}
+
+Built with
 [uv](https://docs.astral.sh/uv/),
 [just](https://just.systems/),
 [ruff](https://docs.astral.sh/ruff/),
@@ -10,14 +12,20 @@ A template for Python packages built with
 
 ## Installation
 
+{% if with_pypi -%}
 ```sh
-pip install python-package-template
+pip install {{ project_name }}
 ```
+{%- else -%}
+```sh
+pip install git+https://github.com/{{ github_owner }}/{{ project_name }}
+```
+{%- endif %}
 
 ## Usage
 
 ```python
-from python_package_template import greet
+from {{ package_name }} import greet
 
 greet("world")
 ```

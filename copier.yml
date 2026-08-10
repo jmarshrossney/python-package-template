@@ -1,0 +1,119 @@
+# Copier template configuration.
+#
+# See README.md for how to generate a project, and AGENTS.md for the two rules
+# governing which files carry a `.jinja` suffix.
+
+_subdirectory: template
+_min_copier_version: "9.0.0"
+
+
+# Questions
+# ---------
+
+project_name:
+  type: str
+  help: Project name, as it appears on PyPI and in the repository URL
+  placeholder: my-package
+  validator: "{% if not project_name %}Required{% endif %}"
+
+package_name:
+  type: str
+  help: Import name (must be a valid Python identifier)
+  default: "{{ project_name.lower().replace('-', '_').replace(' ', '_').replace('.', '_') }}"
+  # Jinja has no `re`, so the default cannot sanitise arbitrary input the way a
+  # regex would. The validator carries the guarantee instead.
+  validator: >-
+    {% if not package_name.isidentifier() %}
+    Not a valid Python identifier
+    {% endif %}
+
+project_description:
+  type: str
+  help: One-line description of the project
+  placeholder: Does a thing.
+  validator: "{% if not project_description %}Required{% endif %}"
+
+github_owner:
+  type: str
+  help: GitHub user or organisation that will host the repository
+  placeholder: my-github-username
+  validator: "{% if not github_owner %}Required{% endif %}"
+
+author_name:
+  type: str
+  help: Package author, for pyproject.toml and the docs site
+  validator: "{% if not author_name %}Required{% endif %}"
+
+author_email:
+  type: str
+  help: Author email, for pyproject.toml
+  validator: "{% if not author_email %}Required{% endif %}"
+
+copyright_holder:
+  type: str
+  help: Copyright holder — your name, or your employer's if they own the work
+  default: "{{ author_name }}"
+
+license:
+  type: str
+  help: License
+  default: MIT
+  choices:
+    MIT: MIT
+    Apache 2.0: Apache-2.0
+    BSD 3-Clause: BSD-3-Clause
+    None (all rights reserved): none
+
+with_pypi:
+  type: bool
+  help: Include the PyPI publishing workflow?
+  default: true
+
+with_cli:
+  type: bool
+  help: Include a Typer command line entry point?
+  default: false
+
+
+# Post-generation tasks
+# ---------------------
+#
+# Declaring tasks makes `--trust` mandatory: without it Copier refuses to
+# generate at all (exit 4) rather than silently skipping them, so there is no
+# half-generated state to guard against.
+
+_tasks:
+  # Copier's Jinja environment has no date function and question defaults
+  # cannot shell out, so the year is stamped in after generation rather than
+  # rendered. LICENSE is absent when the license question answered "none".
+  - command: >-
+      uv run --no-project python -c
+      "import datetime, pathlib;
+      year = str(datetime.date.today().year);
+      [p.write_text(p.read_text().replace('@YEAR@', year))
+      for p in map(pathlib.Path, ['LICENSE', 'zensical.toml']) if p.exists()]"
+
+  # The template ships no uv.lock: it would embed the template's own
+  # distribution name. The generated CI runs `uv sync --locked`, so the
+  # lockfile needs to exist and be committed.
+  - command: uv lock
+
+
+_message_after_copy: |
+  Created {{ project_name }} in {{ _copier_conf.dst_path }}.
+
+  Next:
+    1. git init && git add -A && git commit   (uv.lock must be committed)
+    2. just                                   lint, typecheck, test, docs
+    3. Enable Pages: Settings -> Pages -> Source: GitHub Actions
+  {%- if with_pypi %}
+    4. Register a pending trusted publisher on PyPI and TestPyPI, and create
+       `pypi` and `testpypi` environments in the repo settings. See the header
+       comment in .github/workflows/publish.yml.
+  {%- endif %}
+
+  Then replace the placeholders the template cannot fill in for you:
+    - the `lucide/smile` logo in zensical.toml
+    - the maths section of docs/getting-started.md (and the KaTeX blocks in
+      zensical.toml, if the docs have no maths)
+    - the `greet` placeholder in src/{{ package_name }}/__init__.py
