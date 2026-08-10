@@ -1,0 +1,180 @@
+name: test-template
+
+# There is nothing to test in this repository directly: it is a Copier
+# template, not a Python package. So CI generates a project and runs *that*
+# project's suite, which checks the template as what users actually receive,
+# including the render step itself.
+#
+# The generated project is rendered to $RUNNER_TEMP, outside the workspace:
+# `just check-canonical` runs `git diff --exit-code examples/`, which would
+# walk up to this repository and pass vacuously if the generated project were
+# nested inside it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    name: ${{ matrix.variant }} / py${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [full]
+        python-version: ["3.12", "3.13", "3.14"]
+        include:
+          # Both feature flags off, and no license: a different set of files
+          # exists, so it needs its own render.
+          - variant: minimal
+            python-version: "3.12"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Copier renders from git; tags determine the template version.
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v8.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Render
+        run: |
+          if [ "${{ matrix.variant }}" = "full" ]; then
+            FLAGS="--data with_pypi=true --data with_cli=true --data license=MIT"
+          else
+            FLAGS="--data with_pypi=false --data with_cli=false --data license=none"
+          fi
+          uvx copier copy --defaults --trust \
+            --data project_name=demo-pkg \
+            --data project_description="Does a thing." \
+            --data github_owner=someone-else \
+            --data author_name="Ada Lovelace" \
+            --data author_email=ada@example.com \
+            $FLAGS \
+            . "$RUNNER_TEMP/rendered"
+
+      - name: Assert nothing template-specific survived
+        working-directory: ${{ runner.temp }}/rendered
+        run: |
+          fail=0
+
+          # Unrendered Jinja. A dollar-prefixed brace pair is GitHub Actions
+          # syntax in the workflow files, which are deliberately not suffixed
+          # with .jinja, so it is excluded by the negative lookbehind.
+          if grep -rnP '(?<!\$)\{\{|\{%' . --exclude-dir=.git --exclude=uv.lock; then
+            echo "::error::unrendered Jinja delimiters in generated project"
+            fail=1
+          fi
+
+          # The post-copy year stamp did not run, or did not match.
+          if grep -rn '@YEAR@' . --exclude-dir=.git --exclude=uv.lock; then
+            echo "::error::@YEAR@ placeholder survived"
+            fail=1
+          fi
+
+          # The template's own name leaking into a generated project.
+          if grep -rn 'python_package_template\|python-package-template' . \
+              --exclude-dir=.git --exclude=uv.lock --exclude=.copier-answers.yml; then
+            echo "::error::template name leaked into generated project"
+            fail=1
+          fi
+
+          # The template owner's name. Exactly one occurrence is legitimate:
+          # the marimo-md-export URL, a real third-party link. Rewriting that
+          # to a nonexistent URL is the bug the old bootstrap.py had, so this
+          # check is deliberately narrow rather than a blanket exclusion.
+          if grep -rn 'jmarshrossney' . --exclude-dir=.git --exclude=uv.lock \
+              | grep -v 'jmarshrossney/marimo-md-export'; then
+            echo "::error::template owner leaked into generated project"
+            fail=1
+          fi
+
+          exit $fail
+
+      - name: Assert conditional files match the answers
+        working-directory: ${{ runner.temp }}/rendered
+        run: |
+          if [ "${{ matrix.variant }}" = "full" ]; then
+            test -f .github/workflows/publish.yml
+            test -f src/demo_pkg/cli.py
+            test -f tests/test_cli.py
+            test -f LICENSE
+          else
+            test ! -e .github/workflows/publish.yml
+            test ! -e src/demo_pkg/cli.py
+            test ! -e tests/test_cli.py
+            test ! -e LICENSE
+            ! grep -q '^license' pyproject.toml
+          fi
+
+      - name: Run the generated project's suite
+        working-directory: ${{ runner.temp }}/rendered
+        run: |
+          # check-canonical diffs the working tree, so it needs to be a repo.
+          git init -q .
+          git add -A
+          uv sync --group dev --locked
+          uv run just lint-check
+          uv run just check-canonical
+          uv run just typecheck
+          uv run just test-cov
+          uv run just check-examples
+
+  # The template's own Pages site is a demo of the docs a generated project
+  # gets. It is built from a render, because this repository cannot build docs
+  # itself — zensical.toml here is a Jinja template, not valid config.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v8.1.0
+      # The `docs` group omits rust-just, so `just` is installed separately.
+      - uses: extractions/setup-just@v4
+
+      - name: Render the demo project
+        # project_name and github_owner must match where this deploys, or
+        # site_url in the built site is wrong. with_pypi is false because
+        # there is no PyPI package behind this demo.
+        run: |
+          uvx copier copy --defaults --trust \
+            --data project_name=python-package-template \
+            --data project_description="A Copier template for Python packages." \
+            --data github_owner=jmarshrossney \
+            --data author_name="Joe Marsh Rossney" \
+            --data author_email=17361029+jmarshrossney@users.noreply.github.com \
+            --data with_pypi=false \
+            . "$RUNNER_TEMP/rendered"
+
+      - name: Build the docs
+        working-directory: ${{ runner.temp }}/rendered
+        run: |
+          uv sync --group docs --locked
+          just docs
+
+      - uses: actions/upload-pages-artifact@v4
+        if: github.event_name == 'push'
+        with:
+          path: ${{ runner.temp }}/rendered/site
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [render, docs]
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+        id: deployment
