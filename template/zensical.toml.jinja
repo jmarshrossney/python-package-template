@@ -11,7 +11,7 @@ repo_name = "{{ github_owner }}/{{ project_name }}"
 repo_url = "https://github.com/{{ github_owner }}/{{ project_name }}"
 
 copyright = """
-Copyright &copy; @YEAR@ {{ copyright_holder }}
+Copyright &copy; {{ "%Y" | strftime }} {{ copyright_holder }}
 """
 
 nav = [

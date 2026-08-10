@@ -70,39 +70,21 @@ with_cli:
   default: false
 
 
-# Post-generation tasks
-# ---------------------
-#
-# Declaring tasks makes `--trust` mandatory: without it Copier refuses to
-# generate at all (exit 4) rather than silently skipping them, so there is no
-# half-generated state to guard against.
-
-_tasks:
-  # Copier's Jinja environment has no date function and question defaults
-  # cannot shell out, so the copyright year is stamped in after generation
-  # rather than rendered. LICENSE is absent when with_license is false.
-  - command: >-
-      uv run --no-project python -c
-      "import datetime, pathlib;
-      year = str(datetime.date.today().year);
-      [p.write_text(p.read_text().replace('@YEAR@', year))
-      for p in map(pathlib.Path, ['LICENSE', 'zensical.toml']) if p.exists()]"
-
-  # The template ships no uv.lock: it would embed the template's own
-  # distribution name. The generated CI runs `uv sync --locked`, so the
-  # lockfile needs to exist and be committed.
-  - command: uv lock
+# There are deliberately no `_tasks`: declaring any would make `--trust`
+# mandatory for every `copier copy` and `copier update`. The copyright year
+# comes from the `strftime` filter instead, and `uv sync` writes uv.lock.
 
 
 _message_after_copy: |
   Created {{ project_name }} in {{ _copier_conf.dst_path }}.
 
   Next:
-    1. git init && git add -A && git commit   (uv.lock must be committed)
+    1. uv sync --group dev                    also writes uv.lock
     2. just                                   lint, typecheck, test, docs
-    3. Enable Pages: Settings -> Pages -> Source: GitHub Actions
+    3. git init && git add -A && git commit   (uv.lock must be committed)
+    4. Enable Pages: Settings -> Pages -> Source: GitHub Actions
   {%- if with_pypi %}
-    4. Register a pending trusted publisher on PyPI and TestPyPI, and create
+    5. Register a pending trusted publisher on PyPI and TestPyPI, and create
        `pypi` and `testpypi` environments in the repo settings. See the header
        comment in .github/workflows/publish.yml.
   {%- endif %}

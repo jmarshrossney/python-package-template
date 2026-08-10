@@ -11,21 +11,21 @@ Its CI generates a project from this template and runs that project's full suite
 ## Usage
 
 ```sh
-uvx copier copy --trust gh:jmarshrossney/python-package-template my-project
+uvx copier copy gh:jmarshrossney/python-package-template my-project
 ```
 
-`--trust` is required, and Copier will refuse to run without it: the template
-uses post-generation tasks to stamp the copyright year and create `uv.lock`.
+The template declares no post-generation tasks, so `--trust` is not needed.
 
 Then:
 
 ```sh
 cd my-project
-git init && git add -A && git commit -m "Generated from python-package-template"
+uv sync --group dev
 just
+git init && git add -A && git commit -m "Generated from python-package-template"
 ```
 
-Commit `uv.lock` — the generated CI runs `uv sync --locked`.
+`uv sync` writes `uv.lock`; commit it, because the generated CI runs `uv sync --locked`.
 
 Finally, enable Pages under **Settings → Pages → Source: GitHub Actions**.
 
@@ -54,7 +54,7 @@ With `with_license=false` no `LICENSE` is written and the `license` field is set
 Answer non-interactively by passing any of them with `--data`:
 
 ```sh
-uvx copier copy --trust \
+uvx copier copy \
   --data project_name=my-package \
   --data author_name="Your Name" \
   --data author_email=you@example.com \
@@ -70,7 +70,7 @@ Generated projects keep a `.copier-answers.yml`, which records the answers and t
 To pull in later template changes:
 
 ```sh
-copier update --trust
+copier update
 ```
 
 ## What's in the generated project

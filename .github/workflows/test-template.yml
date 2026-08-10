@@ -49,7 +49,7 @@ jobs:
           else
             FLAGS="--data with_pypi=false --data with_cli=false --data with_license=false"
           fi
-          uvx copier copy --defaults --trust \
+          uvx copier copy --defaults \
             --data project_name=demo-pkg \
             --data project_description="Does a thing." \
             --data github_owner=someone-else \
@@ -68,12 +68,6 @@ jobs:
           # with .jinja, so it is excluded by the negative lookbehind.
           if grep -rnP '(?<!\$)\{\{|\{%' . --exclude-dir=.git --exclude=uv.lock; then
             echo "::error::unrendered Jinja delimiters in generated project"
-            fail=1
-          fi
-
-          # The post-copy year stamp did not run, or did not match.
-          if grep -rn '@YEAR@' . --exclude-dir=.git --exclude=uv.lock; then
-            echo "::error::@YEAR@ placeholder survived"
             fail=1
           fi
 
@@ -121,7 +115,9 @@ jobs:
           # check-canonical diffs the working tree, so it needs to be a repo.
           git init -q .
           git add -A
-          uv sync --group dev --locked
+          # Not `--locked`: a fresh render has no uv.lock, because the
+          # template declares no tasks. This call writes it.
+          uv sync --group dev
           uv run just lint-check
           uv run just check-canonical
           uv run just typecheck
@@ -149,7 +145,7 @@ jobs:
         # site_url in the built site is wrong. with_pypi is false because
         # there is no PyPI package behind this demo.
         run: |
-          uvx copier copy --defaults --trust \
+          uvx copier copy --defaults \
             --data project_name=python-package-template \
             --data project_description="A Copier template for Python packages." \
             --data github_owner=jmarshrossney \
@@ -161,7 +157,7 @@ jobs:
       - name: Build the docs
         working-directory: ${{ runner.temp }}/rendered
         run: |
-          uv sync --group docs --locked
+          uv sync --group docs
           just docs
 
       - uses: actions/upload-pages-artifact@v4
