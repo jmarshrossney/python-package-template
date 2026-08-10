@@ -1,58 +1,20 @@
 # AGENTS.md
 
-## Project overview
+`python-package-template` is a [Copier](https://copier.readthedocs.io/) template.
+The generated project lives under `template/`; there is no package to lint or test at the repository root.
 
-`python-package-template` is a [Copier](https://copier.readthedocs.io/) template
-for Python packages. This repository is **not** itself a Python package: there
-is no `pyproject.toml`, no `src/` and no virtualenv at the root. Everything
-under `template/` is a Jinja template of the project that Copier generates.
+## Templating Rules
 
-## Layout
+- Only add `.jinja` to files that contain Jinja substitutions.
+- Files containing GitHub Actions `${{ }}` must remain unsuffixed so Copier does not parse them.
+  If such a file needs substitution, wrap every Actions expression in `{% raw %}…{% endraw %}`.
+- Watch for accidental `{{` in suffixed files, especially LaTeX in Markdown.
+- For feature-dependent files, put the condition in the filename so an empty rendered name omits the file.
+  Prefer this to `_exclude`.
 
-```
-copier.yml                  — questions, tasks, post-copy message
-template/                   — the generated project (Copier `_subdirectory`)
-.github/workflows/
-  test-template.yml         — renders the template, then runs the rendered
-                              project's own suite and publishes its docs
-```
+## Verification
 
-## The two suffix rules
-
-**1. Files containing GitHub Actions `${{ }}` never get a `.jinja` suffix.**
-Jinja's `{{ }}` would consume the Actions expressions. None of the three
-workflows under `template/.github/workflows/` needs any substitution, so all
-three are unsuffixed and copy verbatim. If one ever does need substitution,
-wrap every Actions expression in `{% raw %}…{% endraw %}` first.
-
-**2. Only suffix files that actually need substitution.** Everything else
-copies verbatim, which keeps `git diff` against the generated output readable.
-`CONTRIBUTING.md`, `.pre-commit-config.yaml`, `.python-version`, `.gitignore`
-and `docs/_static/js/katex.js` contain no placeholders and are unsuffixed.
-
-Watch for accidental `{{` in suffixed files. The likeliest source is LaTeX in
-Markdown — `docs/getting-started.md.jinja` contains maths, and something like
-`\frac{{a}}{{b}}` would be parsed as a Jinja expression. Single braces are fine.
-
-## Conditional files
-
-A file whose rendered *name* is empty is not created, so the condition lives in
-the filename:
-
-```
-template/.github/workflows/{% if with_pypi %}publish.yml{% endif %}
-template/src/{{ package_name }}/{% if with_cli %}cli.py{% endif %}.jinja
-template/tests/{% if with_cli %}test_cli.py{% endif %}.jinja
-template/{% if with_license %}LICENSE{% endif %}.jinja
-```
-
-This works with and without the `.jinja` suffix. Prefer it to `_exclude`: the
-condition stays next to the file it governs.
-
-## Working on the template
-
-There is nothing to lint or test at the root. The loop is render, then run the
-generated project's suite:
+Render the template, then run the generated project's suite:
 
 ```sh
 uvx copier copy --defaults --trust \
@@ -65,47 +27,23 @@ uvx copier copy --defaults --trust \
 cd rendered && uv sync --group dev && just
 ```
 
-`rendered/` and `rendered-*/` are gitignored. Copier renders from git `HEAD`,
-warning that uncommitted changes are included — that warning is expected while
-iterating.
-
-Test both feature combinations before pushing: `with_pypi`/`with_cli` both true
-and both false. CI does this, and additionally asserts that no `@YEAR@`, Jinja
-delimiter, or `python_package_template` survives into the rendered output.
-
-The one permitted occurrence of `jmarshrossney` in rendered output is the
-`marimo-md-export` URL in `examples/notebook.py` — a real third-party link. CI
-allows exactly that one and fails on any other, because rewriting it to a
-nonexistent URL is precisely the bug the old `bootstrap.py` had.
+`rendered/` and `rendered-*/` are gitignored, and Copier's warning about uncommitted changes is expected.
+Test both `with_pypi`/`with_cli` combinations (both true and both false).
+CI also checks that rendered output contains no `@YEAR@`, Jinja delimiters, or `python_package_template`.
+The sole permitted `jmarshrossney` occurrence is the real `marimo-md-export` URL in `examples/notebook.py`.
 
 ## Releasing
 
-Copier resolves `gh:` shorthand to the latest PEP 440 git tag, **not** to the
-default branch. Template changes are invisible to users until a new tag exists:
+Copier resolves `gh:` shorthand to the latest PEP 440 git tag, not the default branch.
+Template changes are invisible to users until a new tag exists.
 
-```sh
-git tag v1.1.0 && git push --tags
-```
+The template version is unrelated to the generated project's starting version.
+Bump the minor when questions are added, renamed, or removed because `copier update` replays those questions and a rename is breaking.
 
-## Things that do not work in Copier
+## Copier Constraints
 
-- **No date function**, and question defaults cannot shell out, so the
-  copyright year cannot be rendered. It is stamped by a post-copy task in
-  `copier.yml`, which replaces a literal `@YEAR@` in `LICENSE` and
-  `zensical.toml`. That task rewrites *every* `@YEAR@` in those files, so
-  never write a comment that mentions the placeholder — it will be substituted
-  too.
-
-## The license placeholder must stay valid SPDX
-
-When `with_license` is false, `pyproject.toml` sets
-`license = "LicenseRef-TODO-CHOOSE-A-LICENSE"`. It is tempting to make this
-shout louder with something like `TODO`, but an invalid SPDX expression fails
-`uv sync`, not just `uv build` — the generated project cannot be installed at
-all, and CI's render job goes red. `LicenseRef-` identifiers are valid per PEP
-639 and survive `uv lock`, `uv sync` and `uv build`, while still appearing
-verbatim in wheel metadata and on PyPI.
-- **No `git config` access**, so `author_name` and `author_email` have no
-  inferred defaults and must be answered or passed with `--data`.
-- **Jinja has no `re`**, so `package_name`'s default sanitises via chained
-  `.replace()` and a `validator` enforces `.isidentifier()`.
+- Copier has no date function and question defaults cannot shell out.
+  The post-copy task stamps `@YEAR@` in `LICENSE` and `zensical.toml`; do not mention that literal elsewhere in those files.
+- When `with_license` is false, keep `license = "LicenseRef-TODO-CHOOSE-A-LICENSE"` valid SPDX so `uv sync` and `uv build` continue to work.
+- Copier cannot access `git config`, so `author_name` and `author_email` need explicit answers or `--data` values.
+- Jinja has no `re`; keep `package_name` sanitisation as chained `.replace()` calls with `.isidentifier()` validation.

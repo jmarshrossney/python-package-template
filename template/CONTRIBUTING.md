@@ -1,24 +1,16 @@
 # Contributing
 
-Contributions are welcome. Please open a Pull Request against the `main` branch.
+Contributions are welcome.
+Please open a Pull Request against the `main` branch.
 
 ## Getting started
 
-This project uses [`uv`](https://docs.astral.sh/uv/). Install the project and
-its development dependencies with
+This project uses [`uv`](https://docs.astral.sh/uv/). 
+Install the project and its development dependencies with
 
 ```sh
 uv sync
 ```
-
-If you use [`direnv`](https://direnv.net/), drop a one-line `.envrc` in the
-repository root so the virtualenv activates on `cd`:
-
-```sh
-echo 'use uv' > .envrc && direnv allow
-```
-
-(`.envrc` is intentionally not tracked — it's local to your machine.)
 
 A [`justfile`](justfile) provides the common tasks. Run everything with
 
@@ -41,11 +33,9 @@ or individually:
 | `just docs` | Export the example notebooks, then `zensical build` |
 | `just docs-serve` | The same, with a live-reloading local server |
 
-If you don't have `just` on your PATH, prefix with `uv run`, e.g.
-`uv run just test`.
+If you don't have `just` on your PATH, prefix with `uv run`, e.g. `uv run just test`.
 
-Consider installing [`pre-commit`](https://pre-commit.com/) so that the hooks in
-[`.pre-commit-config.yaml`](.pre-commit-config.yaml) run before each commit:
+Consider installing [`pre-commit`](https://pre-commit.com/) so that the hooks in [`.pre-commit-config.yaml`](.pre-commit-config.yaml) run before each commit:
 
 ```sh
 uv tool install pre-commit
@@ -54,13 +44,10 @@ pre-commit install
 
 ## Documentation
 
-The documentation is built with [Zensical](https://zensical.org/) from the
-Markdown in `docs/`, plus an API reference generated from docstrings by
-[mkdocstrings](https://mkdocstrings.github.io/).
+The documentation is built with [Zensical](https://zensical.org/) from the Markdown in `docs/`, plus an API reference generated from docstrings by [mkdocstrings](https://mkdocstrings.github.io/).
 
-`docs/example.md` is **generated** — it is exported from
-`examples/notebook.py` (a [marimo](https://marimo.io/) notebook) by
-`just docs`, with cell outputs rendered. Edit the notebook, not the Markdown:
+`docs/example.md` is **generated** — it is exported from `examples/notebook.py` (a [marimo](https://marimo.io/) notebook) by `just docs`, with cell outputs rendered.
+Edit the notebook, not the Markdown:
 
 ```sh
 marimo edit examples/notebook.py
@@ -71,7 +58,5 @@ Preview the site locally with `just docs-serve`.
 ## Style
 
 - Ruff enforces formatting and lint; see `[tool.ruff]` in `pyproject.toml`.
-- Public functions and classes in `src/` need docstrings, in
-  [Google style](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings).
-  Tests, scripts and examples are exempt.
+- Public functions and classes in `src/` need docstrings, in [Google style](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings).
 - Type annotations are expected; `pyright` runs over `src/` and `tests/`.
