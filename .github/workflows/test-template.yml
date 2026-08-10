@@ -158,7 +158,9 @@ jobs:
         working-directory: ${{ runner.temp }}/rendered
         run: |
           uv sync --group docs
-          just docs
+          # `uv run`, not bare `just`: the recipes call marimo-md-export and
+          # zensical, which are only on PATH inside the project venv.
+          uv run just docs
 
       - uses: actions/upload-pages-artifact@v4
         if: github.event_name == 'push'
