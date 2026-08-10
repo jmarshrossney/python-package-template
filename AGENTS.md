@@ -45,4 +45,4 @@ Bump the minor when questions are added, renamed, or removed because `copier upd
   The copyright year comes from `{{ "%Y" | strftime }}`, an Ansible filter Copier always loads; the generated project has no `uv.lock` until `uv sync` runs.
 - When `with_license` is false, keep `license = "LicenseRef-TODO-CHOOSE-A-LICENSE"` valid SPDX so `uv sync` and `uv build` continue to work.
 - Copier cannot access `git config`, so `author_name` and `author_email` need explicit answers or `--data` values.
-- Jinja has no `re`; keep `package_name` sanitisation as chained `.replace()` calls with `.isidentifier()` validation.
+- Jinja itself has no `re`, but the Ansible filters provide `regex_replace` and friends, which is what `package_name` sanitisation uses.

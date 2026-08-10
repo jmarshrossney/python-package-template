@@ -57,8 +57,15 @@ uvx copier copy \
   gh:jmarshrossney/python-package-template my-project
 ```
 
-Copier cannot read `git config`, so we cannot infer defaults for `author_name` and `author_email`.
-If you generate projects often, keep your answers in a file and pass `--data-file`.
+Copier cannot read `git config`, so `author_name` and `author_email` have no defaults.
+If you generate projects often, put them in `~/.config/copier/settings.yml`, which prefills questions of the same name for every template you use:
+
+```yaml
+defaults:
+  author_name: Your Name
+  author_email: you@example.com
+  github_owner: your-github-username
+```
 
 ### Updating an existing project
 
