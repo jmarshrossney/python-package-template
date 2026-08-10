@@ -45,9 +45,9 @@ jobs:
       - name: Render
         run: |
           if [ "${{ matrix.variant }}" = "full" ]; then
-            FLAGS="--data with_pypi=true --data with_cli=true"
+            FLAGS="--data with_pypi=true --data with_cli=true --data with_license=true"
           else
-            FLAGS="--data with_pypi=false --data with_cli=false"
+            FLAGS="--data with_pypi=false --data with_cli=false --data with_license=false"
           fi
           uvx copier copy --defaults --trust \
             --data project_name=demo-pkg \
@@ -99,17 +99,20 @@ jobs:
       - name: Assert conditional files match the answers
         working-directory: ${{ runner.temp }}/rendered
         run: |
-          # No LICENSE in either variant: the template deliberately does not
-          # choose a license, so it must never generate one.
-          test ! -e LICENSE
           if [ "${{ matrix.variant }}" = "full" ]; then
             test -f .github/workflows/publish.yml
             test -f src/demo_pkg/cli.py
             test -f tests/test_cli.py
+            test -f LICENSE
+            grep -q '^license = "MIT"$' pyproject.toml
           else
             test ! -e .github/workflows/publish.yml
             test ! -e src/demo_pkg/cli.py
             test ! -e tests/test_cli.py
+            test ! -e LICENSE
+            # Never absent: a missing license field is easy to miss, a loud
+            # placeholder is not. It must also stay valid SPDX — see AGENTS.md.
+            grep -q '^license = "LicenseRef-TODO-CHOOSE-A-LICENSE"$' pyproject.toml
           fi
 
       - name: Run the generated project's suite
@@ -124,6 +127,9 @@ jobs:
           uv run just typecheck
           uv run just test-cov
           uv run just check-examples
+          # An invalid `license` value fails here and in `uv sync` above, so
+          # this is the gate on the LicenseRef placeholder staying valid.
+          uv build
 
   # The template's own Pages site is a demo of the docs a generated project
   # gets. It is built from a render, because this repository cannot build docs

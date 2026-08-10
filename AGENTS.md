@@ -43,6 +43,7 @@ the filename:
 template/.github/workflows/{% if with_pypi %}publish.yml{% endif %}
 template/src/{{ package_name }}/{% if with_cli %}cli.py{% endif %}.jinja
 template/tests/{% if with_cli %}test_cli.py{% endif %}.jinja
+template/{% if with_license %}LICENSE{% endif %}.jinja
 ```
 
 This works with and without the `.jinja` suffix. Prefer it to `_exclude`: the
@@ -89,9 +90,21 @@ git tag v1.1.0 && git push --tags
 ## Things that do not work in Copier
 
 - **No date function**, and question defaults cannot shell out, so the
-  copyright year in the docs footer cannot be rendered. It is stamped by a
-  post-copy task in `copier.yml`, which replaces a literal `@YEAR@` in
-  `zensical.toml`.
+  copyright year cannot be rendered. It is stamped by a post-copy task in
+  `copier.yml`, which replaces a literal `@YEAR@` in `LICENSE` and
+  `zensical.toml`. That task rewrites *every* `@YEAR@` in those files, so
+  never write a comment that mentions the placeholder — it will be substituted
+  too.
+
+## The license placeholder must stay valid SPDX
+
+When `with_license` is false, `pyproject.toml` sets
+`license = "LicenseRef-TODO-CHOOSE-A-LICENSE"`. It is tempting to make this
+shout louder with something like `TODO`, but an invalid SPDX expression fails
+`uv sync`, not just `uv build` — the generated project cannot be installed at
+all, and CI's render job goes red. `LicenseRef-` identifiers are valid per PEP
+639 and survive `uv lock`, `uv sync` and `uv build`, while still appearing
+verbatim in wheel metadata and on PyPI.
 - **No `git config` access**, so `author_name` and `author_email` have no
   inferred defaults and must be answered or passed with `--data`.
 - **Jinja has no `re`**, so `package_name`'s default sanitises via chained

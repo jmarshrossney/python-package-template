@@ -10,9 +10,15 @@ authors = [
     { name = "{{ author_name }}", email = "{{ author_email }}" }
 ]
 readme = "README.md"
-# No license is generated: pick one, add a LICENSE file, then set (for example)
-#   license = "MIT"
-#   license-files = ["LICENSE"]
+{%- if with_license %}
+license = "MIT"
+license-files = ["LICENSE"]
+{%- else %}
+# No license has been chosen yet. This placeholder is a valid SPDX expression,
+# so the package still builds, but it appears verbatim in the built metadata
+# and on PyPI. Add a LICENSE file and replace this with its SPDX identifier.
+license = "LicenseRef-TODO-CHOOSE-A-LICENSE"
+{%- endif %}
 requires-python = ">=3.12"
 {%- if with_cli %}
 dependencies = ["typer>=0.15.0"]

@@ -28,15 +28,22 @@ Commit `uv.lock` — the generated CI runs `uv sync --locked`.
 
 Finally, enable Pages under **Settings → Pages → Source: GitHub Actions**.
 
-### No license is generated
+### Licensing
 
-Choosing a license is a decision about your work, not a template setting, so
-the template does not make it for you and does not ship a default. Add a
-`LICENSE` file yourself and set `license` in `pyproject.toml` to match.
+By default you get an MIT `LICENSE` and `license = "MIT"` in
+`pyproject.toml`. MIT is a default, not a recommendation — if it isn't what
+you want, pass `--data with_license=false` and add your own;
 [choosealicense.com](https://choosealicense.com/) is a reasonable starting
 point.
 
-`copyright_holder` is only used for the copyright line in the docs footer.
+With `with_license=false` no `LICENSE` is written and the `license` field is
+set to `LicenseRef-TODO-CHOOSE-A-LICENSE`. That is a valid SPDX expression, so
+the package still builds and installs, but it appears verbatim in the built
+wheel metadata and on the PyPI page until you replace it. The field is
+deliberately never left absent, because a missing license is easy to not
+notice and a loud placeholder isn't.
+
+`copyright_holder` fills the `LICENSE` copyright line and the docs footer.
 
 ### Questions
 
@@ -48,7 +55,8 @@ point.
 | `github_owner` | — | User or organisation |
 | `author_name` | — | |
 | `author_email` | — | |
-| `copyright_holder` | `author_name` | Docs footer; set this to your employer if they own the work |
+| `copyright_holder` | `author_name` | LICENSE and docs footer; set this to your employer if they own the work |
+| `with_license` | `true` | An MIT LICENSE. False leaves a loud placeholder instead |
 | `with_pypi` | `true` | The PyPI publishing workflow |
 | `with_cli` | `false` | A Typer entry point, with tests |
 

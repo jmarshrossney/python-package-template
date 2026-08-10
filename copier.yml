@@ -51,8 +51,13 @@ author_email:
 
 copyright_holder:
   type: str
-  help: Copyright holder for the docs footer — you, or your employer if they own the work
+  help: Copyright holder — you, or your employer if they own the work
   default: "{{ author_name }}"
+
+with_license:
+  type: bool
+  help: Ship an MIT LICENSE? Answer no to choose a license yourself
+  default: true
 
 with_pypi:
   type: bool
@@ -74,13 +79,14 @@ with_cli:
 
 _tasks:
   # Copier's Jinja environment has no date function and question defaults
-  # cannot shell out, so the year in the docs footer is stamped in after
-  # generation rather than rendered.
+  # cannot shell out, so the copyright year is stamped in after generation
+  # rather than rendered. LICENSE is absent when with_license is false.
   - command: >-
       uv run --no-project python -c
       "import datetime, pathlib;
-      p = pathlib.Path('zensical.toml');
-      p.write_text(p.read_text().replace('@YEAR@', str(datetime.date.today().year)))"
+      year = str(datetime.date.today().year);
+      [p.write_text(p.read_text().replace('@YEAR@', year))
+      for p in map(pathlib.Path, ['LICENSE', 'zensical.toml']) if p.exists()]"
 
   # The template ships no uv.lock: it would embed the template's own
   # distribution name. The generated CI runs `uv sync --locked`, so the
@@ -101,9 +107,12 @@ _message_after_copy: |
        comment in .github/workflows/publish.yml.
   {%- endif %}
 
-  No LICENSE file is generated — choosing a license is yours to make, not the
-  template's. Add one, and set `license` in pyproject.toml to match.
+  {% if not with_license -%}
+  No LICENSE file was generated, and `license` in pyproject.toml is set to a
+  placeholder that will show up in your package metadata and on PyPI until you
+  replace it. Choose a license, add the file, and set the field to match.
 
+  {% endif -%}
   Then replace the placeholders the template cannot fill in for you:
     - the `lucide/smile` logo in zensical.toml
     - the maths section of docs/getting-started.md (and the KaTeX blocks in
