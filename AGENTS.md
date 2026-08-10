@@ -30,7 +30,6 @@ cd rendered && uv sync --group dev && just
 `rendered/` and `rendered-*/` are gitignored, and Copier's warning about uncommitted changes is expected.
 Test both `with_pypi`/`with_cli` combinations (both true and both false).
 CI also checks that rendered output contains no Jinja delimiters or `python_package_template`.
-The sole permitted `jmarshrossney` occurrence is the real `marimo-md-export` URL in `examples/notebook.py`.
 
 ## Releasing
 
@@ -42,7 +41,7 @@ Bump the minor when questions are added, renamed, or removed because `copier upd
 
 ## Copier Constraints
 
-- Keep `_tasks` empty: declaring any makes `--trust` mandatory for every `copy` and `update`, and tasks re-run on update so each would have to be idempotent.
+- Aim to keep `_tasks` empty: declaring any makes `--trust` mandatory for every `copy` and `update`, and tasks re-run on update so each would have to be idempotent.
   The copyright year comes from `{{ "%Y" | strftime }}`, an Ansible filter Copier always loads; the generated project has no `uv.lock` until `uv sync` runs.
 - When `with_license` is false, keep `license = "LicenseRef-TODO-CHOOSE-A-LICENSE"` valid SPDX so `uv sync` and `uv build` continue to work.
 - Copier cannot access `git config`, so `author_name` and `author_email` need explicit answers or `--data` values.
