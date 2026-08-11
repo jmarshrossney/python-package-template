@@ -19,9 +19,16 @@ project_name:
 package_name:
   type: str
   help: Import name (must be a valid Python identifier)
-  default: "{{ project_name.lower().replace('-', '_').replace(' ', '_').replace('.', '_') }}"
-  # Jinja has no `re`, so the default cannot sanitise arbitrary input the way a
-  # regex would. The validator carries the guarantee instead.
+  # Collapse anything that isn't identifier-safe, trim the underscores that
+  # leaves at either end, then prefix one if the result starts with a digit.
+  # `regex_replace` comes from the Ansible filters Copier always loads.
+  default: >-
+    {{ project_name | lower
+       | regex_replace('[^a-z0-9_]+', '_')
+       | regex_replace('^_+|_+$', '')
+       | regex_replace('^(?=[0-9])', '_') }}
+  # The default handles the cases worth handling; the validator is the actual
+  # guarantee, and still catches input it cannot sensibly rescue.
   validator: >-
     {% if not package_name.isidentifier() %}
     Not a valid Python identifier

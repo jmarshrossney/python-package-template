@@ -49,7 +49,7 @@ jobs:
           else
             FLAGS="--data with_pypi=false --data with_cli=false --data with_license=false"
           fi
-          uvx copier copy --defaults \
+          uvx copier copy --defaults --vcs-ref=HEAD \
             --data project_name=demo-pkg \
             --data project_description="Does a thing." \
             --data github_owner=someone-else \
@@ -145,7 +145,7 @@ jobs:
         # site_url in the built site is wrong. with_pypi is false because
         # there is no PyPI package behind this demo.
         run: |
-          uvx copier copy --defaults \
+          uvx copier copy --defaults --vcs-ref=HEAD \
             --data project_name=python-package-template \
             --data project_description="A Copier template for Python packages." \
             --data github_owner=jmarshrossney \

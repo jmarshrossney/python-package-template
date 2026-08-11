@@ -17,7 +17,7 @@ The generated project lives under `template/`; there is no package to lint or te
 Render the template, then run the generated project's suite:
 
 ```sh
-uvx copier copy --defaults \
+uvx copier copy --defaults --vcs-ref=HEAD \
   --data project_name=demo-pkg \
   --data project_description="Does a thing." \
   --data github_owner=someone-else \
@@ -27,7 +27,9 @@ uvx copier copy --defaults \
 cd rendered && uv sync --group dev && just
 ```
 
-`rendered/` and `rendered-*/` are gitignored, and Copier's warning about uncommitted changes is expected.
+`--vcs-ref=HEAD` is essential: without it Copier renders the latest tag, so you silently test the last release instead of your work.
+It is also what makes Copier pick up uncommitted changes, hence the dirty-state warning, which is expected.
+`rendered/` and `rendered-*/` are gitignored.
 Test both `with_pypi`/`with_cli` combinations (both true and both false).
 CI also checks that rendered output contains no Jinja delimiters or `python_package_template`.
 
@@ -45,4 +47,4 @@ Bump the minor when questions are added, renamed, or removed because `copier upd
   The copyright year comes from `{{ "%Y" | strftime }}`, an Ansible filter Copier always loads; the generated project has no `uv.lock` until `uv sync` runs.
 - When `with_license` is false, keep `license = "LicenseRef-TODO-CHOOSE-A-LICENSE"` valid SPDX so `uv sync` and `uv build` continue to work.
 - Copier cannot access `git config`, so `author_name` and `author_email` need explicit answers or `--data` values.
-- Jinja has no `re`; keep `package_name` sanitisation as chained `.replace()` calls with `.isidentifier()` validation.
+- Jinja itself has no `re`, but the Ansible filters provide `regex_replace` and friends, which is what `package_name` sanitisation uses.
