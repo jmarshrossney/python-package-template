@@ -6,28 +6,29 @@ Its CI generates a project from this template and runs that project's full suite
 
 > [!NOTE]
 > This template is primarily for my own personal use.
-> I've made it public so feel free to use it, fork it, adapt it etc., but I'm not really interested in taking contributions.
+> I've made it public so feel free to use it, fork it, adapt it etc, but I'm not really interested in taking contributions.
 
 ## Usage
+
+Clone the template with
 
 ```sh
 uvx copier copy gh:jmarshrossney/python-package-template my-project
 ```
 
-Then:
+Then `cd` into `my-project` and run
+
 
 ```sh
-cd my-project
-uv sync --group dev
+uv sync
 just
-git init && git add -A && git commit -m "Generated from python-package-template"
 ```
 
 Finally, enable Pages under **Settings → Pages → Source: GitHub Actions**.
 
 ### Licensing
 
-By default you get an MIT `LICENSE` and `license = "MIT"` in `pyproject.toml`.
+The template generates an MIT by default.
 If this isn't what you want, pass `--data with_license=false` and add your own; [choosealicense.com](https://choosealicense.com/) is a reasonable starting point.
 
 With `with_license=false` no `LICENSE` is written and the `license` field is set to `LicenseRef-TODO-CHOOSE-A-LICENSE`. 
@@ -57,8 +58,7 @@ uvx copier copy \
   gh:jmarshrossney/python-package-template my-project
 ```
 
-Copier cannot read `git config`, so `author_name` and `author_email` have no defaults.
-If you generate projects often, put them in `~/.config/copier/settings.yml`, which prefills questions of the same name for every template you use:
+If you use copier templates often you can store these in `~/.config/copier/settings.yml`, which prefills questions of the same name for every template you use:
 
 ```yaml
 defaults:
