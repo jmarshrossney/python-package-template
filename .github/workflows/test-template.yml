@@ -206,8 +206,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: extractions/setup-just@v4
-      - run: just check-versions
+      # Stdlib-only, so no uv or just setup needed.
+      - run: python3 scripts/check_versions.py
 
   # The template's own Pages site is a demo of the docs a generated project
   # gets. It is built from a render, because this repository cannot build docs
