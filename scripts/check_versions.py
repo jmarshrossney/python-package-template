@@ -1,3 +1,7 @@
+# /// script
+# requires-python = ">=3.13"
+# dependencies = ["packaging>=25.0"]
+# ///
 """Assert uv_build and the uv-pre-commit hook name the same uv release.
 
 `bump` derives one from the other, so this only fires on a hand edit that

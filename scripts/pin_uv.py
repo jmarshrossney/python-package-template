@@ -1,3 +1,7 @@
+# /// script
+# requires-python = ">=3.13"
+# dependencies = ["packaging>=25.0"]
+# ///
 """Pin uv to the newest release the generated project's cutoff allows.
 
 `pre-commit autoupdate` jumps to the newest release, which may be hours old.

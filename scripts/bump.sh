@@ -20,10 +20,10 @@ uvx pre-commit autoupdate -c template/.pre-commit-config.yaml
 
 echo
 echo "==> pinning uv to the newest release the cutoff allows"
-python3 "$scripts/pin_uv.py"
+uv run --quiet "$scripts/pin_uv.py"
 
 echo
-python3 "$scripts/check_versions.py"
+uv run --quiet "$scripts/check_versions.py"
 
 echo
 echo "==> what changed"

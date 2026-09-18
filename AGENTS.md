@@ -78,6 +78,7 @@ It stops before committing, so read the diff.
 `just check-versions` asserts that uv pairing on its own, and CI runs it.
 
 The recipes are thin wrappers; the work is in `scripts/`, which keeps it lintable and runnable without just.
+The Python ones are PEP 723 scripts run with `uv run`, so they get a pinned interpreter and `packaging` rather than whatever `python3` happens to be.
 `scripts/uv_pins.py` is the only place that knows how the two uv pins are written, so the check and the bump cannot disagree about it.
 The ruff and pyright revs are not paired to anything: pre-commit builds those hooks in its own environments, so they are free to sit at latest.
 

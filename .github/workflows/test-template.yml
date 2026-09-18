@@ -206,8 +206,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      # Stdlib-only, so no uv or just setup needed.
-      - run: python3 scripts/check_versions.py
+      - uses: astral-sh/setup-uv@v8.1.0
+      # PEP 723 script: uv resolves the interpreter and packaging itself.
+      - run: uv run --quiet scripts/check_versions.py
 
   # The template's own Pages site is a demo of the docs a generated project
   # gets. It is built from a render, because this repository cannot build docs

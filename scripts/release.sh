@@ -33,7 +33,7 @@ if git rev-parse -q --verify "refs/tags/$version" >/dev/null; then
     exit 1
 fi
 
-python3 "$root/scripts/check_versions.py"
+uv run --quiet "$root/scripts/check_versions.py"
 git tag -a "$version" -m "$version"
 git push origin "$version"
 echo "pushed $version"

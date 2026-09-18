@@ -4,6 +4,9 @@ The uv-pre-commit hook writes ``uv.lock`` and the ``uv_build`` backend consumes
 it, so both must name the same uv release. Everything that reads or writes that
 pairing lives here, so ``check_versions.py`` and ``pin_uv.py`` cannot disagree
 about what the files look like.
+
+Imported, never run directly, so the PEP 723 block lives on the two entry
+scripts. Both declare the same requires-python and dependencies.
 """
 
 import json
@@ -11,6 +14,8 @@ import re
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+from packaging.version import InvalidVersion, Version
 
 ROOT = Path(__file__).resolve().parent.parent
 PRE_COMMIT_CONFIG = ROOT / "template/.pre-commit-config.yaml"
@@ -26,21 +31,15 @@ _HOOK_REV = re.compile(
 )
 _UV_BUILD = re.compile(r"uv_build>=(\d+\.\d+\.\d+),<(\d+\.\d+\.\d+)")
 
-_FINAL_VERSION = re.compile(r"^\d+\.\d+\.\d+$")
-
 
 class PinError(Exception):
     """A pin could not be read or written as expected."""
 
 
-def _key(version):
-    return tuple(int(part) for part in version.split("."))
-
-
 def cap_for(version):
     """The upper bound paired with ``version``: one minor above it."""
-    major, minor, _ = _key(version)
-    return f"{major}.{minor + 1}.0"
+    parsed = Version(version)
+    return f"{parsed.major}.{parsed.minor + 1}.0"
 
 
 def read_hook_rev():
@@ -74,20 +73,24 @@ def write_uv_build(low, high):
 
 
 def released_uv_builds():
-    """Final uv-build releases on PyPI, as {version: first upload time}."""
+    """Released uv-build versions on PyPI, as {Version: first upload time}."""
     url = "https://pypi.org/pypi/uv-build/json"
     with urllib.request.urlopen(url, timeout=30) as response:
         releases = json.load(response)["releases"]
 
     uploads = {}
     for version, files in releases.items():
-        if not _FINAL_VERSION.match(version) or not files:
+        if not files:
             continue
-        # .replace for the trailing Z: fromisoformat only accepts it on 3.11+,
-        # and this runs under whatever python3 is on PATH.
-        uploads[version] = min(
-            datetime.fromisoformat(item["upload_time_iso_8601"].replace("Z", "+00:00"))
-            for item in files
+        try:
+            parsed = Version(version)
+        except InvalidVersion:
+            continue
+        # Prereleases are never what the template should pin to.
+        if parsed.is_prerelease:
+            continue
+        uploads[parsed] = min(
+            datetime.fromisoformat(item["upload_time_iso_8601"]) for item in files
         )
     return uploads
 
@@ -102,11 +105,11 @@ def newest_allowed(days=7):
     """
     uploads = released_uv_builds()
     if not uploads:
-        raise PinError("PyPI returned no final uv-build releases")
+        raise PinError("PyPI returned no released uv-build versions")
 
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     eligible = [v for v, uploaded in uploads.items() if uploaded <= cutoff]
     if not eligible:
         raise PinError(f"no uv-build release is more than {days} days old")
 
-    return max(eligible, key=_key), max(uploads, key=_key)
+    return str(max(eligible)), str(max(uploads))
