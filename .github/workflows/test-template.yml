@@ -15,6 +15,11 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    # Mondays, 06:00 UTC. Only the `canary` job does anything new on a
+    # schedule; `render` and `docs` run as usual and publish nothing, because
+    # the Pages upload and `deploy` are both gated on `github.event_name`.
+    - cron: "0 6 * * 1"
 
 permissions:
   contents: read
@@ -126,6 +131,84 @@ jobs:
           # An invalid `license` value fails here and in `uv sync` above, so
           # this is the gate on the LicenseRef placeholder staying valid.
           uv build
+
+  # `render` resolves against the index as it was a week ago, because the
+  # generated pyproject.toml sets `[tool.uv] exclude-newer = "1 week"`. This
+  # job lifts that cutoff, so it sees new releases roughly a week before any
+  # user does.
+  #
+  # It is allowed to fail. Red here means "something shipped that breaks the
+  # generated project", which is information, not a broken branch. Nothing
+  # depends on it, so `deploy` is unaffected either way.
+  canary:
+    name: canary (cutoff lifted)
+    if: github.event_name == 'schedule'
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v8.1.0
+
+      - name: Lift the index cutoff
+        # Overrides `exclude-newer` for every uv call in this job, including
+        # the implicit re-lock inside `uv run`. Today's date rather than a
+        # far-future one, so a run stays reproducible from its own log.
+        #
+        # This also overrides `exclude-newer-package`, which is fine: that
+        # exemption exists to pull marimo-md-export forward, and this job is
+        # already as far forward as it goes.
+        run: echo "UV_EXCLUDE_NEWER=$(date -u +%F)" >> "$GITHUB_ENV"
+
+      - name: Render
+        run: |
+          uvx copier copy --defaults --vcs-ref=HEAD \
+            --data project_name=demo-pkg \
+            --data project_description="Does a thing." \
+            --data github_owner=someone-else \
+            --data author_name="Ada Lovelace" \
+            --data author_email=ada@example.com \
+            --data with_pypi=true --data with_cli=true --data with_license=true \
+            . "$RUNNER_TEMP/rendered"
+
+      - name: Run the generated project's suite
+        working-directory: ${{ runner.temp }}/rendered
+        run: |
+          git init -q .
+          git add -A
+          uv sync --group dev
+          uv run just lint-check
+          uv run just check-canonical
+          uv run just typecheck
+          uv run just test-cov
+          uv run just check-examples
+          uv build
+
+      - name: Report what it resolved
+        # Runs even when the suite above failed: when the canary is red, this
+        # list is the first thing to read.
+        if: always()
+        working-directory: ${{ runner.temp }}/rendered
+        run: |
+          {
+            echo '### Resolved with the index cutoff lifted'
+            echo
+            echo '```'
+            uv pip list || echo '(resolution failed; see the job log)'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # The uv-pre-commit hook writes uv.lock and the uv_build backend consumes it,
+  # so the two must name the same uv release. `just bump` derives one from the
+  # other; this catches a hand edit that changed only one side.
+  versions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.1.0
+      # PEP 723 script: uv resolves the interpreter and packaging itself.
+      - run: uv run --quiet scripts/check_versions.py
 
   # The template's own Pages site is a demo of the docs a generated project
   # gets. It is built from a render, because this repository cannot build docs
