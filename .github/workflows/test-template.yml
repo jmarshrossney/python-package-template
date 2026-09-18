@@ -199,6 +199,16 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+  # The uv-pre-commit hook writes uv.lock and the uv_build backend consumes it,
+  # so the two must name the same uv release. `just bump` derives one from the
+  # other; this catches a hand edit that changed only one side.
+  versions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: extractions/setup-just@v4
+      - run: just check-versions
+
   # The template's own Pages site is a demo of the docs a generated project
   # gets. It is built from a render, because this repository cannot build docs
   # itself — zensical.toml here is a Jinja template, not valid config.

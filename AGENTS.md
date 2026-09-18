@@ -59,35 +59,24 @@ What does go stale is short, and none of it is weekly:
 | Action versions | root and `template/.github/workflows/` | per major |
 | `requires-python`, classifiers, `.python-version`, CI matrices | several | per Python release |
 
-`astral-sh/setup-uv` must carry a full `major.minor.patch` tag; a bare major no longer resolves.
-
-Keep `uv_build` constrained to one minor (`>=X.Y.Z,<X.(Y+1).0`) and move both bounds together.
-Keep the `uv-pre-commit` rev on the same uv release as `uv_build`.
-
 ### The quarterly bump
 
-Roughly quarterly, or whenever the canary is red:
-
 ```sh
-pre-commit autoupdate -c template/.pre-commit-config.yaml   # the three rev: pins
-$EDITOR template/pyproject.toml.jinja                       # uv_build cap, if uv's minor moved
-just template-check-all                                     # verify both variants
-git tag vX.Y && git push --tags                             # ship it
+just bump              # updates the revs, re-pins uv, verifies both variants
+git commit -am "Bump pinned tool versions"
+just release vX.Y      # tags and pushes; nothing reaches users until this runs
 ```
 
-The tag is the step most likely to be skipped and the one that matters.
-Copier resolves `gh:` shorthand to the latest PEP 440 tag, so an untagged bump reaches nobody.
-This is also why weekly bot PRs would be a poor fit: merging one changes nothing on its own.
+`just bump` runs `pre-commit autoupdate`, then pins uv itself rather than taking the version autoupdate chose.
+`exclude-newer = "1 week"` applies to `build-system.requires` too, so a `uv_build` floor naming a release published in the last week makes every fresh `uv sync` fail until the cutoff catches up.
+So `bump` picks the newest `uv-build` on PyPI that is at least a week old, writes it to both the `uv-pre-commit` rev and the `uv_build` range, and says so when that lags the actual latest.
+The cap is always one minor above the floor.
 
-### The canary
+It stops before committing, so read the diff.
+`just release` refuses a dirty tree, a branch other than `main`, and an existing tag, and re-runs `check-versions` before tagging.
 
-`test-template.yml` runs on a Monday cron with a `canary` job that sets `UV_EXCLUDE_NEWER` to today, lifting the one-week cutoff the generated project ships with.
-It therefore hits new releases about a week before users do.
-It is `continue-on-error`, so red means "something shipped that breaks generated projects", not a broken branch.
-Its step summary lists what resolved, which is the staleness report; read it when the job is red and ignore it otherwise.
-
-Nothing watches for new action majors, and the floors drift below current indefinitely.
-Both are intended.
+`just check-versions` asserts that uv pairing on its own, and CI runs it.
+The ruff and pyright revs are not paired to anything: pre-commit builds those hooks in its own environments, so they are free to sit at latest.
 
 ## Releasing
 
