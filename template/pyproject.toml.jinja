@@ -42,6 +42,12 @@ Documentation = "https://{{ github_owner|lower }}.github.io/{{ project_name }}"
 [project.scripts]
 {{ project_name }} = "{{ package_name }}.cli:app"
 {% endif %}
+# These bounds are floors, not pins: `uv sync` already resolves to the newest
+# version each one allows, so raising them changes nothing for anyone. Do not
+# "freshen" them, by hand or by bot. They exist only to stop resolution
+# reaching for something ancient, and `[tool.uv] exclude-newer` below means a
+# floor above the version that existed a week ago fails resolution outright.
+# So these want to be low. Raise one only to reach a feature you need.
 [dependency-groups]
 dev = [
     "pre-commit>=4.6.1",
