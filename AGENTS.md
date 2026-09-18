@@ -59,7 +59,7 @@ What does go stale is short, and none of it is weekly:
 | Action versions | root and `template/.github/workflows/` | per major |
 | `requires-python`, classifiers, `.python-version`, CI matrices | several | per Python release |
 
-### The quarterly bump
+### Version bump
 
 ```sh
 just bump              # updates the revs, re-pins uv, verifies both variants
@@ -67,20 +67,7 @@ git commit -am "Bump pinned tool versions"
 just release vX.Y      # tags and pushes; nothing reaches users until this runs
 ```
 
-`just bump` runs `pre-commit autoupdate`, then pins uv itself rather than taking the version autoupdate chose.
-`exclude-newer = "1 week"` applies to `build-system.requires` too, so a `uv_build` floor naming a release published in the last week makes every fresh `uv sync` fail until the cutoff catches up.
-So `bump` picks the newest `uv-build` on PyPI that is at least a week old, writes it to both the `uv-pre-commit` rev and the `uv_build` range, and says so when that lags the actual latest.
-The cap is always one minor above the floor.
-
-It stops before committing, so read the diff.
-`just release` refuses a dirty tree, a branch other than `main`, and an existing tag, and re-runs `check-versions` before tagging.
-
-`just check-versions` asserts that uv pairing on its own, and CI runs it.
-
-The recipes are thin wrappers; the work is in `scripts/`, which keeps it lintable and runnable without just.
-The Python ones are PEP 723 scripts run with `uv run`, so they get a pinned interpreter and `packaging` rather than whatever `python3` happens to be.
-`scripts/uv_pins.py` is the only place that knows how the two uv pins are written, so the check and the bump cannot disagree about it.
-The ruff and pyright revs are not paired to anything: pre-commit builds those hooks in its own environments, so they are free to sit at latest.
+To be done by the user only!
 
 ## Releasing
 
