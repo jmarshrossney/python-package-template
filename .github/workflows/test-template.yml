@@ -51,12 +51,15 @@ jobs:
         run: |
           if [ "${{ matrix.variant }}" = "full" ]; then
             FLAGS="--data with_pypi=true --data with_cli=true --data with_license=true"
+            DESCRIPTION="Does a thing."
           else
             FLAGS="--data with_pypi=false --data with_cli=false --data with_license=false"
+            # No full stop: the module docstring must add one, or ruff's D415 fails.
+            DESCRIPTION="Does a thing"
           fi
           uvx copier copy --defaults --vcs-ref=HEAD \
             --data project_name=demo-pkg \
-            --data project_description="Does a thing." \
+            --data project_description="$DESCRIPTION" \
             --data github_owner=someone-else \
             --data author_name="Ada Lovelace" \
             --data author_email=ada@example.com \

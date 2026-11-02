@@ -87,7 +87,7 @@ _message_after_copy: |
 
   Next:
     1. uv sync --group dev                    also writes uv.lock
-    2. just                                   lint, typecheck, test, docs
+    2. uv run just                            lint, typecheck, test, docs
     3. git init && git add -A && git commit   (uv.lock must be committed)
     4. Enable Pages: Settings -> Pages -> Source: GitHub Actions
   {%- if with_pypi %}

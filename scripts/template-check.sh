@@ -24,8 +24,11 @@ trap 'rm -rf "$dst"' EXIT
 
 if [ "$variant" = "full" ]; then
     flags=(--data with_pypi=true --data with_cli=true --data with_license=true)
+    description="Does a thing."
 else
     flags=(--data with_pypi=false --data with_cli=false --data with_license=false)
+    # No full stop: the module docstring must add one, or ruff's D415 fails.
+    description="Does a thing"
 fi
 
 # Rendered from `.` inside the repository, exactly as CI does, not from an
@@ -38,7 +41,7 @@ cd "$root"
 # dirty-state warning Copier prints is expected.
 uvx copier copy --defaults --vcs-ref=HEAD \
     --data project_name=demo-pkg \
-    --data project_description="Does a thing." \
+    --data project_description="$description" \
     --data github_owner=someone-else \
     --data author_name="Ada Lovelace" \
     --data author_email=ada@example.com \

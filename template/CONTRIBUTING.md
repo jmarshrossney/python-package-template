@@ -15,7 +15,7 @@ uv sync
 A [`justfile`](justfile) provides the common tasks. Run everything with
 
 ```sh
-just
+uv run just
 ```
 
 or individually:
@@ -33,7 +33,7 @@ or individually:
 | `just docs` | Export the example notebooks, then `zensical build` |
 | `just docs-serve` | The same, with a live-reloading local server |
 
-If you don't have `just` on your PATH, prefix with `uv run`, e.g. `uv run just test`.
+The recipes call tools installed in the project's virtual environment, so prefix each command with `uv run`, e.g. `uv run just test`, unless that environment is activated (for example by direnv).
 
 Consider installing [`pre-commit`](https://pre-commit.com/) so that the hooks in [`.pre-commit-config.yaml`](.pre-commit-config.yaml) run before each commit:
 
