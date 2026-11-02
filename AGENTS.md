@@ -33,7 +33,7 @@ uvx copier copy --defaults --vcs-ref=HEAD \
   --data author_name="Ada Lovelace" \
   --data author_email=ada@example.com \
   . rendered
-cd rendered && uv sync --group dev && just
+cd rendered && uv sync --group dev && uv run just
 ```
 
 `--vcs-ref=HEAD` is essential: without it Copier renders the latest tag, so you silently test the last release instead of your work.

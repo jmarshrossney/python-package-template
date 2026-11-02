@@ -21,7 +21,7 @@ Then `cd` into `my-project` and run
 
 ```sh
 uv sync
-just
+uv run just
 ```
 
 Finally, enable Pages under **Settings → Pages → Source: GitHub Actions**.

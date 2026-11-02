@@ -33,20 +33,20 @@ for more.
 
 ## Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). In short: `uv sync`, then `just`.
+See [CONTRIBUTING.md](CONTRIBUTING.md). In short: `uv sync`, then `uv run just`.
 
 ```
-just                  # lint, typecheck, test, check-examples, docs
-just lint             # ruff format, marimo check --fix, ruff check --fix, marimo --strict
-just lint-check       # non-mutating variant, used by CI
-just check-canonical  # assert the notebooks are in marimo's canonical form
-just check-examples   # actually execute the example notebooks
-just typecheck        # pyright
-just test             # pytest
-just test-cov         # pytest with coverage, fails under 90%
-just doctest          # run the doctest examples in src/
-just docs             # export example notebooks, then zensical build
-just docs-serve       # the same, with a live-reloading local server
+uv run just                  # lint, typecheck, test, check-examples, docs
+uv run just lint             # ruff format, marimo check --fix, ruff check --fix, marimo --strict
+uv run just lint-check       # non-mutating variant, used by CI
+uv run just check-canonical  # assert the notebooks are in marimo's canonical form
+uv run just check-examples   # actually execute the example notebooks
+uv run just typecheck        # pyright
+uv run just test             # pytest
+uv run just test-cov         # pytest with coverage, fails under 90%
+uv run just doctest          # run the doctest examples in src/
+uv run just docs             # export example notebooks, then zensical build
+uv run just docs-serve       # the same, with a live-reloading local server
 ```
 
 ---
