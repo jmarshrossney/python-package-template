@@ -3,7 +3,7 @@
 #
 # Updates the pre-commit revs, re-pins uv to a version the generated project's
 # cutoff actually allows, then renders and tests both variants. Stops before
-# committing, and does not tag: `just release vX.Y` does that.
+# committing, and does not tag: `just release X.Y` does that.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -42,4 +42,4 @@ echo "==> verifying both variants"
 echo
 echo "Bump verified. Next:"
 echo "  git commit -am 'Bump pinned tool versions'"
-echo "  just release vX.Y"
+echo "  just release X.Y"

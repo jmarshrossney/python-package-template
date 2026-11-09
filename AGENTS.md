@@ -64,7 +64,7 @@ What does go stale is short, and none of it is weekly:
 ```sh
 just bump              # updates the revs, re-pins uv, verifies both variants
 git commit -am "Bump pinned tool versions"
-just release vX.Y      # tags and pushes; nothing reaches users until this runs
+just release X.Y       # tags and pushes; nothing reaches users until this runs
 ```
 
 To be done by the user only!

@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # Tag a release and push it.
 #
-# Usage: scripts/release.sh vX.Y
+# Usage: scripts/release.sh X.Y[.Z]   (tags vX.Y[.Z]; a leading v is accepted)
 #
 # Copier resolves `gh:` shorthand to the latest PEP 440 tag, so template
 # changes reach nobody until this runs.
 set -euo pipefail
 
 version="${1:-}"
+version="v${version#v}"
 if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
-    echo "version must look like v1.2 or v1.2.3, got '$version'" >&2
+    echo "version must look like 1.2 or 1.2.3, got '${1:-}'" >&2
     exit 2
 fi
 
