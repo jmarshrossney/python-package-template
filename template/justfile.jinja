@@ -65,8 +65,7 @@ docs-serve: docs-examples
   zensical serve
 {%- if with_pypi %}
 
-# Tag the version in pyproject.toml, push it, and publish a GitHub release for
-# it, which publishes to PyPI. An a/b/rc version becomes a pre-release.
+# Tag the pyproject.toml version and publish it as a GitHub release and to PyPI.
 [group('release')]
 release:
   #!/usr/bin/env bash
