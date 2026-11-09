@@ -3,6 +3,7 @@ _:
   @just lint typecheck test check-examples docs
 
 # Format and lint the package using ruff, and lint the examples using marimo.
+[group('check')]
 lint:
   ruff format
   marimo check --fix examples/
@@ -10,45 +11,77 @@ lint:
   marimo check --strict examples/
 
 # Variant of `lint` that doesn't cause any changes to files (for CI).
+[group('check')]
 lint-check:
   ruff format --check
   ruff check
   marimo check --strict examples/
 
 # Assert the example notebooks are in marimo's canonical form.
+[group('check')]
 check-canonical:
   marimo check --fix examples/
   git diff --exit-code examples/
 
 # Confirm the example notebooks actually run.
+[group('check')]
 check-examples:
   python examples/notebook.py
 
 # Run static type checker.
+[group('check')]
 typecheck:
   pyright
 
 # Run the test suite using pytest.
+[group('test')]
 test:
   pytest
 
 # Run tests with coverage report.
+[group('test')]
 test-cov:
   pytest --cov={{ package_name }} --cov-report=term-missing --cov-fail-under=90
 
 # Run doctest examples embedded in source docstrings.
+[group('test')]
 doctest:
   pytest --doctest-modules src/{{ package_name }}
 
 # Export the example notebooks, then build the documentation using Zensical.
+[group('docs')]
 docs: docs-examples
   zensical build
 
 # Export the example notebooks to markdown with their rendered outputs.
+[group('docs')]
 docs-examples:
   marimo-md-export examples/notebook.py docs/example.md
   ruff format examples/  # override marimo's reformatting
 
 # Serve the documentation locally with live reload.
+[group('docs')]
 docs-serve: docs-examples
   zensical serve
+{%- if with_pypi %}
+
+# Tag the version in pyproject.toml, push it, and publish a GitHub release for
+# it, which publishes to PyPI. An a/b/rc version becomes a pre-release.
+[group('release')]
+release:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  v=$(uv version --short)
+  [[ $v != *dev* ]] || { echo "refusing to release dev version $v" >&2; exit 1; }
+  [[ $(git branch --show-current) == main ]] || { echo "not on main" >&2; exit 1; }
+  git diff --quiet HEAD || { echo "uncommitted changes" >&2; exit 1; }
+  git fetch --quiet origin main
+  [[ $(git rev-parse HEAD) == $(git rev-parse origin/main) ]] \
+    || { echo "main differs from origin/main" >&2; exit 1; }
+  gh auth status >/dev/null || { echo "gh is not logged in" >&2; exit 1; }
+  pre=()
+  [[ ! $v =~ (a|b|rc)[0-9]+$ ]] || pre=(--prerelease)
+  git tag -a "v$v" -m "v$v"
+  git push origin "v$v"
+  gh release create "v$v" --verify-tag --generate-notes ${pre[@]+"${pre[@]}"}
+{%- endif %}

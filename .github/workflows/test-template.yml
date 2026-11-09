@@ -134,6 +134,12 @@ jobs:
           # An invalid `license` value fails here and in `uv sync` above, so
           # this is the gate on the LicenseRef placeholder staying valid.
           uv build
+          # The generated CI's `smoke` job: the built wheel installs and runs
+          # on its own, without the source tree.
+          uv run --isolated --no-project --with dist/*.whl python -c "import demo_pkg"
+          if [ "${{ matrix.variant }}" = "full" ]; then
+            uv run --isolated --no-project --with dist/*.whl demo-pkg --help
+          fi
 
   # `render` resolves against the index as it was a week ago, because the
   # generated pyproject.toml sets `[tool.uv] exclude-newer = "1 week"`. This
@@ -187,6 +193,8 @@ jobs:
           uv run just test-cov
           uv run just check-examples
           uv build
+          uv run --isolated --no-project --with dist/*.whl python -c "import demo_pkg"
+          uv run --isolated --no-project --with dist/*.whl demo-pkg --help
 
       - name: Report what it resolved
         # Runs even when the suite above failed: when the canary is red, this

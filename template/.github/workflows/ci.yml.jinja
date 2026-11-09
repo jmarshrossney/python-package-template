@@ -27,8 +27,22 @@ jobs:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v8.1.0
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: {% raw %}${{ matrix.python-version }}{% endraw %}
       - run: uv sync --group dev --locked
       - run: uv run just test-cov
       # Neither linting nor the docs export fails on a notebook that raises.
       - run: uv run just check-examples
+
+  smoke:
+    # Install the built wheel rather than the source tree, so a file missing
+    # from the wheel or a broken entry point fails here instead of after a
+    # release. `uv build` builds the wheel from the sdist, so this covers both.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv build
+      - run: uv run --isolated --no-project --with dist/*.whl python -c "import {{ package_name }}"
+{%- if with_cli %}
+      - run: uv run --isolated --no-project --with dist/*.whl {{ project_name }} --help
+{%- endif %}
