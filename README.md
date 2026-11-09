@@ -25,6 +25,13 @@ uv run just
 ```
 
 Finally, enable Pages under **Settings → Pages → Source: GitHub Actions**.
+With `with_pypi`, docs deploy when a release is published, from the release's tag, which the `github-pages` environment rejects by default.
+Allow tags too:
+
+```sh
+gh api -X POST repos/<owner>/<repo>/environments/github-pages/deployment-branch-policies \
+  -f name='v*' -f type=tag
+```
 
 ### Licensing
 

@@ -95,3 +95,8 @@ uv run just typecheck
 uv run just test-cov
 uv run just check-examples
 uv build
+# The generated CI's `smoke` job: the built wheel installs and runs on its own.
+uv run --isolated --no-project --with dist/*.whl python -c "import demo_pkg"
+if [ "$variant" = "full" ]; then
+    uv run --isolated --no-project --with dist/*.whl demo-pkg --help
+fi
