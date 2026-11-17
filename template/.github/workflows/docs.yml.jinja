@@ -1,8 +1,8 @@
 name: docs
 
 on:
-{%- if with_pypi %}
-  # Deploy on a stable release, so the site documents what PyPI serves rather
+{%- if release != 'none' %}
+  # Deploy on a stable release, so the site documents the latest release rather
   # than unreleased work on main. Pre-releases build but do not deploy.
   release:
     types: [published]

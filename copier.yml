@@ -66,10 +66,18 @@ with_license:
   help: Ship an MIT LICENSE? Answer no to choose a license yourself
   default: true
 
-with_pypi:
-  type: bool
-  help: Include the PyPI publishing workflow?
-  default: true
+release:
+  type: str
+  help: How is the package released?
+  choices:
+    PyPI (tag, GitHub release, publish to PyPI): pypi
+    GitHub only (tag and GitHub release; users install a tag): github
+    No releases (users install from main): none
+  # Projects generated before 0.3.0 answered the bool `with_pypi` instead.
+  # `copier update` exposes their old answers here, so this carries them over
+  # without a `_migrations` entry, which would make `--trust` mandatory.
+  default: >-
+    {% if with_pypi is defined and not with_pypi %}none{% else %}pypi{% endif %}
 
 with_cli:
   type: bool
@@ -90,7 +98,7 @@ _message_after_copy: |
     2. uv run just                            lint, typecheck, test, docs
     3. git init && git add -A && git commit   (uv.lock must be committed)
     4. Enable Pages: Settings -> Pages -> Source: GitHub Actions
-  {%- if with_pypi %}
+  {%- if release == 'pypi' %}
     5. Register a pending trusted publisher on PyPI and TestPyPI, and create
        `pypi` and `testpypi` environments in the repo settings. See the header
        comment in .github/workflows/publish.yml.

@@ -2,7 +2,7 @@
 
 ## Installation
 
-{% if with_pypi -%}
+{% if release == 'pypi' -%}
 Install from PyPI:
 
 ```sh
@@ -13,6 +13,18 @@ Or, if you use [uv](https://docs.astral.sh/uv/), add it to a project:
 
 ```sh
 uv add {{ project_name }}
+```
+{%- elif release == 'github' -%}
+Install a [release](https://github.com/{{ github_owner }}/{{ project_name }}/releases) from the repository, replacing `vX.Y.Z` with its tag:
+
+```sh
+pip install git+https://github.com/{{ github_owner }}/{{ project_name }}@vX.Y.Z
+```
+
+Or, if you use [uv](https://docs.astral.sh/uv/), add it to a project:
+
+```sh
+uv add git+https://github.com/{{ github_owner }}/{{ project_name }} --tag vX.Y.Z
 ```
 {%- else -%}
 Install from the repository:

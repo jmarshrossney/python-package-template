@@ -63,9 +63,9 @@ docs-examples:
 [group('docs')]
 docs-serve: docs-examples
   zensical serve
-{%- if with_pypi %}
+{%- if release != 'none' %}
 
-# Tag the pyproject.toml version and publish it as a GitHub release and to PyPI.
+# Tag the pyproject.toml version and publish it as a GitHub release{% if release == 'pypi' %} and to PyPI{% endif %}.
 [group('release')]
 release:
   #!/usr/bin/env bash

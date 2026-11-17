@@ -3,12 +3,12 @@
 _default:
     @just --list
 
-# Render the template and run the generated project's suite. variant: full|minimal
+# Render the template and run the generated project's suite. variant: full|github|minimal
 template-check variant="full":
     @scripts/template-check.sh {{ variant }}
 
-# Run template-check for both variants.
-template-check-all: (template-check "full") (template-check "minimal")
+# Run template-check for every variant.
+template-check-all: (template-check "full") (template-check "github") (template-check "minimal")
 
 # Assert uv_build and the uv-pre-commit hook name the same uv release.
 check-versions:

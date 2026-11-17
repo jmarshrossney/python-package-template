@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Render the template and run the generated project's suite.
 #
-# Usage: scripts/template-check.sh [full|minimal]
+# Usage: scripts/template-check.sh [full|github|minimal]
 #
 # Mirrors the `render` job in .github/workflows/test-template.yml. When that
 # workflow changes, change this too: a local check that is a subset of CI gives
@@ -9,10 +9,13 @@
 set -euo pipefail
 
 variant="${1:-full}"
-if [ "$variant" != "full" ] && [ "$variant" != "minimal" ]; then
-    echo "variant must be 'full' or 'minimal', got '$variant'" >&2
-    exit 2
-fi
+case "$variant" in
+    full | github | minimal) ;;
+    *)
+        echo "variant must be 'full', 'github' or 'minimal', got '$variant'" >&2
+        exit 2
+        ;;
+esac
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -23,10 +26,14 @@ dst="$(mktemp -d)"
 trap 'rm -rf "$dst"' EXIT
 
 if [ "$variant" = "full" ]; then
-    flags=(--data with_pypi=true --data with_cli=true --data with_license=true)
+    flags=(--data release=pypi --data with_cli=true --data with_license=true)
+    description="Does a thing."
+elif [ "$variant" = "github" ]; then
+    # Differs from full only in `release`, so a failure points at that axis.
+    flags=(--data release=github --data with_cli=true --data with_license=true)
     description="Does a thing."
 else
-    flags=(--data with_pypi=false --data with_cli=false --data with_license=false)
+    flags=(--data release=none --data with_cli=false --data with_license=false)
     # No full stop: the module docstring must add one, or ruff's D415 fails.
     description="Does a thing"
 fi
@@ -70,16 +77,26 @@ fi
 
 if [ "$variant" = "full" ]; then
     test -f .github/workflows/publish.yml
-    test -f src/demo_pkg/cli.py
-    test -f tests/test_cli.py
-    test -f LICENSE
-    grep -q '^license = "MIT"$' pyproject.toml
+    grep -q 'TestPyPI' AGENTS.md
 else
     test ! -e .github/workflows/publish.yml
+    # Not `! grep`: a negated command never trips `set -e`.
+    if grep -n 'TestPyPI' AGENTS.md; then exit 1; fi
+fi
+if [ "$variant" = "minimal" ]; then
+    if grep -n '^release:' justfile; then exit 1; fi
+    grep -q '^  push:' .github/workflows/docs.yml
     test ! -e src/demo_pkg/cli.py
     test ! -e tests/test_cli.py
     test ! -e LICENSE
     grep -q '^license = "LicenseRef-TODO-CHOOSE-A-LICENSE"$' pyproject.toml
+else
+    grep -q '^release:' justfile
+    grep -q '^  release:' .github/workflows/docs.yml
+    test -f src/demo_pkg/cli.py
+    test -f tests/test_cli.py
+    test -f LICENSE
+    grep -q '^license = "MIT"$' pyproject.toml
 fi
 
 [ "$fail" -eq 0 ] || exit 1
@@ -97,6 +114,6 @@ uv run just check-examples
 uv build
 # The generated CI's `smoke` job: the built wheel installs and runs on its own.
 uv run --isolated --no-project --with dist/*.whl python -c "import demo_pkg"
-if [ "$variant" = "full" ]; then
+if [ "$variant" != "minimal" ]; then
     uv run --isolated --no-project --with dist/*.whl demo-pkg --help
 fi
