@@ -29,6 +29,13 @@ if [ "$branch" != "main" ]; then
     exit 1
 fi
 
+# A stale local main would tag a commit without the latest merges.
+git fetch --quiet origin main
+if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+    echo "main differs from origin/main; pull or push first" >&2
+    exit 1
+fi
+
 if git rev-parse -q --verify "refs/tags/$version" >/dev/null; then
     echo "tag $version already exists" >&2
     exit 1

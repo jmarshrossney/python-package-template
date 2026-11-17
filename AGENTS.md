@@ -44,6 +44,34 @@ Render from `.` rather than an absolute path: Copier records the source in `.cop
 Test all three `release` values; `just template-check-all` pairs them with the feature flags as CI does.
 CI also checks that rendered output contains no Jinja delimiters or `python_package_template`.
 
+### Testing `copier update`
+
+Needed when a change touches questions or answers, since `copier update` is how existing projects receive it.
+CI does not cover it.
+
+```sh
+d="$(mktemp -d)/old"
+uvx copier copy --defaults --vcs-ref="$(git describe --tags --abbrev=0)" \
+  --data project_name=demo-pkg \
+  --data project_description="Does a thing." \
+  --data github_owner=someone-else \
+  --data author_name="Ada Lovelace" \
+  --data author_email=ada@example.com \
+  . "$d"
+sed -i "s|^_src_path: .*|_src_path: $PWD|" "$d/.copier-answers.yml"
+cd "$d" && git init -q && git add -A
+git -c user.name=scratch -c user.email=scratch@example.com commit -qm init --no-gpg-sign
+uvx copier update --defaults --vcs-ref=HEAD
+git diff
+```
+
+- This renders the latest tag; add `--data` for the old answers whose handling you changed.
+- The `sed` is needed because rendering from `.` records `_src_path: .`, which `update` resolves relative to the project and fails with `Unknown revision`.
+  The absolute path stays in the scratch project, so it never reaches the leak check.
+- `update` refuses a destination that is not a clean git repository, hence the commit; its identity and signing flags keep it independent of your git config.
+- `--defaults` answers new questions with their defaults, which is what exercises a default derived from an old answer.
+  Check `.copier-answers.yml` in the diff as well as the files.
+
 ## Dependency Maintenance
 
 There is no dependency bot here, deliberately.
