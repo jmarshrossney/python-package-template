@@ -25,7 +25,7 @@ uv run just
 ```
 
 Finally, enable Pages under **Settings → Pages → Source: GitHub Actions**.
-With `with_pypi`, docs deploy when a release is published, from the release's tag, which the `github-pages` environment rejects by default.
+With `release` set to `pypi` or `github`, docs deploy when a release is published, from the release's tag, which the `github-pages` environment rejects by default.
 Allow tags too:
 
 ```sh
@@ -52,7 +52,7 @@ With `with_license=false` no `LICENSE` is written and the `license` field is set
 | `author_email` | — | |
 | `copyright_holder` | `author_name` | LICENSE and docs footer |
 | `with_license` | `true` | An MIT LICENSE. False leaves a loud placeholder instead |
-| `with_pypi` | `true` | The PyPI publishing workflow |
+| `release` | `pypi` | `pypi`: `just release` and a PyPI publishing workflow. `github`: `just release` only; users install a tag. `none`: no release process; docs deploy from `main` |
 | `with_cli` | `false` | A Typer entry point, with tests |
 
 Answer non-interactively by passing any of them with `--data`:

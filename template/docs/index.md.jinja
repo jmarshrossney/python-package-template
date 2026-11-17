@@ -12,10 +12,16 @@ Built with
 
 ## Installation
 
-{% if with_pypi -%}
+{% if release == 'pypi' -%}
 ```sh
 pip install {{ project_name }}
 ```
+{%- elif release == 'github' -%}
+```sh
+pip install git+https://github.com/{{ github_owner }}/{{ project_name }}@vX.Y.Z
+```
+
+Replace `vX.Y.Z` with a [release](https://github.com/{{ github_owner }}/{{ project_name }}/releases) tag.
 {%- else -%}
 ```sh
 pip install git+https://github.com/{{ github_owner }}/{{ project_name }}

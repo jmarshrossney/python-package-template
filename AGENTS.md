@@ -15,9 +15,10 @@ The generated project lives under `template/`; there is no package to lint or te
 ## Verification
 
 ```sh
-just template-check           # full variant
-just template-check minimal   # both feature flags off
-just template-check-all       # both
+just template-check           # full variant: release=pypi, all flags on
+just template-check github    # release=github, all flags on
+just template-check minimal   # release=none, all flags off
+just template-check-all       # all three
 ```
 
 This mirrors the `render` job in `.github/workflows/test-template.yml`, rendering to a temp directory outside the repository.
@@ -40,7 +41,7 @@ cd rendered && uv sync --group dev && uv run just
 It is also what makes Copier pick up uncommitted changes, hence the dirty-state warning, which is expected.
 `rendered/` and `rendered-*/` are gitignored.
 Render from `.` rather than an absolute path: Copier records the source in `.copier-answers.yml`, and an absolute path containing the owner's name trips CI's leak check.
-Test both `with_pypi`/`with_cli` combinations (both true and both false).
+Test all three `release` values; `just template-check-all` pairs them with the feature flags as CI does.
 CI also checks that rendered output contains no Jinja delimiters or `python_package_template`.
 
 ## Dependency Maintenance

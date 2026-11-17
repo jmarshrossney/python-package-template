@@ -34,8 +34,11 @@ jobs:
         variant: [full]
         python-version: ["3.12", "3.13", "3.14", "3.15"]
         include:
-          # Both feature flags off: a different set of files exists, so it
-          # needs its own render.
+          # release=github, flags on: differs from full only in `release`.
+          - variant: github
+            python-version: "3.12"
+          # release=none, feature flags off: a different set of files exists,
+          # so it needs its own render.
           - variant: minimal
             python-version: "3.12"
     steps:
@@ -50,10 +53,13 @@ jobs:
       - name: Render
         run: |
           if [ "${{ matrix.variant }}" = "full" ]; then
-            FLAGS="--data with_pypi=true --data with_cli=true --data with_license=true"
+            FLAGS="--data release=pypi --data with_cli=true --data with_license=true"
+            DESCRIPTION="Does a thing."
+          elif [ "${{ matrix.variant }}" = "github" ]; then
+            FLAGS="--data release=github --data with_cli=true --data with_license=true"
             DESCRIPTION="Does a thing."
           else
-            FLAGS="--data with_pypi=false --data with_cli=false --data with_license=false"
+            FLAGS="--data release=none --data with_cli=false --data with_license=false"
             # No full stop: the module docstring must add one, or ruff's D415 fails.
             DESCRIPTION="Does a thing"
           fi
@@ -103,18 +109,28 @@ jobs:
         run: |
           if [ "${{ matrix.variant }}" = "full" ]; then
             test -f .github/workflows/publish.yml
-            test -f src/demo_pkg/cli.py
-            test -f tests/test_cli.py
-            test -f LICENSE
-            grep -q '^license = "MIT"$' pyproject.toml
+            grep -q 'TestPyPI' AGENTS.md
           else
             test ! -e .github/workflows/publish.yml
+            # Not `! grep`: a negated command never trips `set -e`.
+            if grep -n 'TestPyPI' AGENTS.md; then exit 1; fi
+          fi
+          if [ "${{ matrix.variant }}" = "minimal" ]; then
+            if grep -n '^release:' justfile; then exit 1; fi
+            grep -q '^  push:' .github/workflows/docs.yml
             test ! -e src/demo_pkg/cli.py
             test ! -e tests/test_cli.py
             test ! -e LICENSE
             # Never absent: a missing license field is easy to miss, a loud
             # placeholder is not. It must also stay valid SPDX — see AGENTS.md.
             grep -q '^license = "LicenseRef-TODO-CHOOSE-A-LICENSE"$' pyproject.toml
+          else
+            grep -q '^release:' justfile
+            grep -q '^  release:' .github/workflows/docs.yml
+            test -f src/demo_pkg/cli.py
+            test -f tests/test_cli.py
+            test -f LICENSE
+            grep -q '^license = "MIT"$' pyproject.toml
           fi
 
       - name: Run the generated project's suite
@@ -137,7 +153,7 @@ jobs:
           # The generated CI's `smoke` job: the built wheel installs and runs
           # on its own, without the source tree.
           uv run --isolated --no-project --with dist/*.whl python -c "import demo_pkg"
-          if [ "${{ matrix.variant }}" = "full" ]; then
+          if [ "${{ matrix.variant }}" != "minimal" ]; then
             uv run --isolated --no-project --with dist/*.whl demo-pkg --help
           fi
 
@@ -178,7 +194,7 @@ jobs:
             --data github_owner=someone-else \
             --data author_name="Ada Lovelace" \
             --data author_email=ada@example.com \
-            --data with_pypi=true --data with_cli=true --data with_license=true \
+            --data release=pypi --data with_cli=true --data with_license=true \
             . "$RUNNER_TEMP/rendered"
 
       - name: Run the generated project's suite
@@ -236,8 +252,8 @@ jobs:
 
       - name: Render the demo project
         # project_name and github_owner must match where this deploys, or
-        # site_url in the built site is wrong. with_pypi is false because
-        # there is no PyPI package behind this demo.
+        # site_url in the built site is wrong. release is none because there
+        # is no release behind this demo, so its docs track main.
         run: |
           uvx copier copy --defaults --vcs-ref=HEAD \
             --data project_name=python-package-template \
@@ -245,7 +261,7 @@ jobs:
             --data github_owner=jmarshrossney \
             --data author_name="Joe Marsh Rossney" \
             --data author_email=17361029+jmarshrossney@users.noreply.github.com \
-            --data with_pypi=false \
+            --data release=none \
             . "$RUNNER_TEMP/rendered"
 
       - name: Build the docs
