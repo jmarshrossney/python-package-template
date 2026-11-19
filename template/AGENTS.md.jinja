@@ -89,20 +89,10 @@ The answers are in `.copier-answers.yml`. `copier update` pulls later template
 changes in; it uses that file to replay the original answers, so keep it
 committed and don't hand-edit it.
 
-## marimo ↔ ruff interaction (do not reorder `lint`)
+## marimo ↔ ruff interaction
 
-Verified against marimo 0.23.16 / ruff 0.16.1:
+Verified against marimo 0.23.16 / ruff 0.16.1.
 
-- `marimo check --fix` must run **before** `ruff check --fix`. It prunes cell
-  return tuples, which can strand an import; ruff then reports the `F401`. The
-  reverse order needs two passes to reach a fixed point.
-- `marimo check` **without `--strict` exits 0** on runtime, formatting and WASM
-  findings — only a broken dependency graph fails it. Always pass `--strict`.
-- Plain `marimo check` reports *nothing* about non-canonical cell signatures, in
-  either mode. `check-canonical` is the only gate for that.
-- `marimo-md-export` prints an error but **exits 0** and still writes the
-  markdown when a cell raises, so `just docs` is not an execution gate.
-  `check-examples` is.
-- Never enable `PLR1711` for `examples/` — ruff deletes the bare `return`
-  ending each cell and `marimo check --fix` re-adds it, forever. Likewise
-  `E501`: a `# noqa` after the closing `"""` oscillates on whitespace.
+- Do not reorder `lint` or drop `--strict` from `marimo check`; the comment above the recipe explains why.
+- `check-canonical` and `check-examples` are the only gates for cell signatures and for cells that raise; see their comments.
+- Do not remove the `examples/**` per-file-ignores in `pyproject.toml`; several stop ruff and marimo undoing each other's fixes.

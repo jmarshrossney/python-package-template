@@ -10,7 +10,12 @@ template-check variant="full":
 # Run template-check for every variant.
 template-check-all: (template-check "full") (template-check "github") (template-check "minimal")
 
-# Assert uv_build and the uv-pre-commit hook name the same uv release.
+# Render the latest tag and `copier update` it to the working tree. args: extra copier args for the old render
+[positional-arguments]
+template-update-check *args:
+    @scripts/template-update-check.sh "$@"
+
+# Assert the uv_build range is the whole minor of the uv-pre-commit rev.
 check-versions:
     @uv run --quiet scripts/check_versions.py
 

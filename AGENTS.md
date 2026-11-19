@@ -50,34 +50,17 @@ Needed when a change touches questions or answers, since `copier update` is how 
 CI does not cover it.
 
 ```sh
-d="$(mktemp -d)/old"
-uvx copier copy --defaults --vcs-ref="$(git describe --tags --abbrev=0)" \
-  --data project_name=demo-pkg \
-  --data project_description="Does a thing." \
-  --data github_owner=someone-else \
-  --data author_name="Ada Lovelace" \
-  --data author_email=ada@example.com \
-  . "$d"
-sed -i "s|^_src_path: .*|_src_path: $PWD|" "$d/.copier-answers.yml"
-cd "$d" && git init -q && git add -A
-git -c user.name=scratch -c user.email=scratch@example.com commit -qm init --no-gpg-sign
-uvx copier update --defaults --vcs-ref=HEAD
-git diff
+just template-update-check                        # latest tag, default answers
+just template-update-check --data release=github  # old answers whose handling changed
 ```
 
-- This renders the latest tag; add `--data` for the old answers whose handling you changed.
-- The `sed` is needed because rendering from `.` records `_src_path: .`, which `update` resolves relative to the project and fails with `Unknown revision`.
-  The absolute path stays in the scratch project, so it never reaches the leak check.
-- `update` refuses a destination that is not a clean git repository, hence the commit; its identity and signing flags keep it independent of your git config.
-- `--defaults` answers new questions with their defaults, which is what exercises a default derived from an old answer.
-  Check `.copier-answers.yml` in the diff as well as the files.
+It renders the latest tag, updates it to the working tree, and prints the diff, including `.copier-answers.yml`.
+The scratch project is kept for inspection; `scripts/template-update-check.sh` explains each step.
 
 ## Dependency Maintenance
 
-There is no dependency bot here, deliberately.
-Most version strings under `template/` need no maintenance: the `[dependency-groups]` bounds are floors, and `uv sync` already resolves past them, so raising one changes nothing for any user.
-`[tool.uv] exclude-newer = "1 week"` makes a raised floor actively harmful, because a floor above the version that existed a week ago fails resolution outright.
-Leave them alone unless you need a feature.
+There is no dependency bot, deliberately; see [ADR 0001](docs/adr/0001-dependency-floors-cutoff-and-canary.md).
+Leave the `[dependency-groups]` floors alone unless you need a feature, and never raise one above the version that existed a week ago.
 
 What does go stale is short, and none of it is weekly:
 
@@ -98,10 +81,8 @@ just release X.Y       # tags and pushes; nothing reaches users until this runs
 
 To be done by the user only!
 
-The `uv_build` range is always the whole minor of the uv-pre-commit rev, `>=X.Y.0,<X.(Y+1).0`; `just check-versions` and CI enforce it.
-An `X.Y.0` floor is older than the one-week cutoff except in a minor's first week, which is what lets a generated project follow its own installed uv.
-Generated projects have their own `just bump` (in `template/justfile.jinja`) that pins the hook to the installed uv and writes the same range, so they need not wait for a template release.
-`scripts/uv_pins.py` and that recipe must agree on the shape.
+The `uv_build` range is always the whole minor of the uv-pre-commit rev, `>=X.Y.0,<X.(Y+1).0`; `scripts/uv_pins.py` and the generated `just bump` in `template/justfile.jinja` must agree.
+See [ADR 0002](docs/adr/0002-uv-build-range-follows-installed-uv.md).
 
 ## Releasing
 
@@ -110,6 +91,11 @@ Template changes are invisible to users until a new tag exists.
 
 The template version is unrelated to the generated project's starting version.
 Bump the minor when questions are added, renamed, or removed because `copier update` replays those questions and a rename is breaking.
+
+## Decisions
+
+Design decisions too large for a commit message are in `docs/adr/`.
+Read the relevant one before changing what it covers, and add one rather than growing this file.
 
 ## Copier Constraints
 

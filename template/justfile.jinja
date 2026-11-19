@@ -2,7 +2,12 @@
 _:
   @just lint typecheck test check-examples docs
 
-# Format and lint the package using ruff, and lint the examples using marimo.
+# Order matters: `marimo check --fix` prunes cell return tuples, which can
+# strand an import, so it must run before `ruff check --fix` reports the F401;
+# the reverse order needs two passes. Without `--strict`, `marimo check` exits 0
+# on runtime, formatting and WASM findings and fails only on a broken
+# dependency graph.
+[doc('Format and lint the package using ruff, and lint the examples using marimo.')]
 [group('check')]
 lint:
   ruff format
@@ -17,13 +22,17 @@ lint-check:
   ruff check
   marimo check --strict examples/
 
-# Assert the example notebooks are in marimo's canonical form.
+# The only gate for non-canonical cell signatures: `marimo check` reports
+# nothing about them.
+[doc("Assert the example notebooks are in marimo's canonical form.")]
 [group('check')]
 check-canonical:
   marimo check --fix examples/
   git diff --exit-code examples/
 
-# Confirm the example notebooks actually run.
+# The only execution gate: `marimo-md-export` in `docs` prints an error but
+# exits 0 when a cell raises.
+[doc('Confirm the example notebooks actually run.')]
 [group('check')]
 check-examples:
   python examples/notebook.py
