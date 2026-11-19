@@ -83,7 +83,7 @@ What does go stale is short, and none of it is weekly:
 
 | Thing | Where | Cadence |
 |---|---|---|
-| `uv_build` upper bound | `template/pyproject.toml.jinja` `[build-system]` | per uv minor |
+| `uv_build` range | `template/pyproject.toml.jinja` `[build-system]` | per uv minor |
 | `rev:` pins | `template/.pre-commit-config.yaml` | per release of uv, ruff, pyright |
 | Action versions | root and `template/.github/workflows/` | per major |
 | `requires-python`, classifiers, `.python-version`, CI matrices | several | per Python release |
@@ -91,12 +91,17 @@ What does go stale is short, and none of it is weekly:
 ### Version bump
 
 ```sh
-just bump              # updates the revs, re-pins uv, verifies both variants
+just bump              # updates the revs, re-pins uv, verifies the full and minimal variants
 git commit -am "Bump pinned tool versions"
 just release X.Y       # tags and pushes; nothing reaches users until this runs
 ```
 
 To be done by the user only!
+
+The `uv_build` range is always the whole minor of the uv-pre-commit rev, `>=X.Y.0,<X.(Y+1).0`; `just check-versions` and CI enforce it.
+An `X.Y.0` floor is older than the one-week cutoff except in a minor's first week, which is what lets a generated project follow its own installed uv.
+Generated projects have their own `just bump` (in `template/justfile.jinja`) that pins the hook to the installed uv and writes the same range, so they need not wait for a template release.
+`scripts/uv_pins.py` and that recipe must agree on the shape.
 
 ## Releasing
 
