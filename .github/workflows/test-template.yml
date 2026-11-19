@@ -157,6 +157,18 @@ jobs:
             uv run --isolated --no-project --with dist/*.whl demo-pkg --help
           fi
 
+      # Last, because it rewrites pins and relocks. The cutoff is lifted so a
+      # uv minor younger than a week, which the recipe rightly refuses, does
+      # not fail unrelated PRs; what is under test is that the edits land.
+      - name: Run the generated project's bump recipe
+        if: matrix.variant == 'full'
+        working-directory: ${{ runner.temp }}/rendered
+        run: |
+          UV_EXCLUDE_NEWER="$(date -u +%F)" uv run just bump
+          v=$(uv self version --short)
+          grep -q "rev: $v$" .pre-commit-config.yaml
+          grep -q "uv_build>=${v%.*}.0,<" pyproject.toml
+
   # `render` resolves against the index as it was a week ago, because the
   # generated pyproject.toml sets `[tool.uv] exclude-newer = "1 week"`. This
   # job lifts that cutoff, so it sees new releases roughly a week before any
@@ -227,8 +239,8 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   # The uv-pre-commit hook writes uv.lock and the uv_build backend consumes it,
-  # so the two must name the same uv release. `just bump` derives one from the
-  # other; this catches a hand edit that changed only one side.
+  # so the uv_build range must be the whole minor of the hook's rev. `just bump`
+  # derives one from the other; this catches a hand edit that changed one side.
   versions:
     runs-on: ubuntu-latest
     steps:

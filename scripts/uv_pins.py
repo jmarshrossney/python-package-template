@@ -1,9 +1,14 @@
 """Read and write the uv version that the template pins in two places.
 
 The uv-pre-commit hook writes ``uv.lock`` and the ``uv_build`` backend consumes
-it, so both must name the same uv release. Everything that reads or writes that
-pairing lives here, so ``check_versions.py`` and ``pin_uv.py`` cannot disagree
-about what the files look like.
+it, so the hook's uv release must fall inside the ``uv_build`` range. The range
+is the whole minor, ``>=X.Y.0,<X.(Y+1).0``: an ``X.Y.0`` floor is almost always
+older than the generated project's one-week ``exclude-newer`` cutoff, so a
+project can move its hook to any uv in that minor, including the one installed
+locally, without touching the floor. The generated project's ``just bump``
+writes the same shape. Everything that reads or writes the pairing lives here,
+so ``check_versions.py`` and ``pin_uv.py`` cannot disagree about what the files
+look like.
 
 Imported, never run directly, so the PEP 723 block lives on the two entry
 scripts. Both declare the same requires-python and dependencies.
@@ -36,8 +41,14 @@ class PinError(Exception):
     """A pin could not be read or written as expected."""
 
 
+def floor_for(version):
+    """The ``uv_build`` lower bound paired with ``version``: its minor's ``.0``."""
+    parsed = Version(version)
+    return f"{parsed.major}.{parsed.minor}.0"
+
+
 def cap_for(version):
-    """The upper bound paired with ``version``: one minor above it."""
+    """The ``uv_build`` upper bound paired with ``version``: the next minor."""
     parsed = Version(version)
     return f"{parsed.major}.{parsed.minor + 1}.0"
 
@@ -101,7 +112,8 @@ def newest_allowed(days=7):
     The generated project sets ``exclude-newer = "1 week"``, and that applies to
     ``build-system.requires`` as well as the dependency groups. A ``uv_build``
     floor naming a release published inside that window makes every fresh
-    ``uv sync`` fail until the cutoff catches up, so the pin has to lag.
+    ``uv sync`` fail until the cutoff catches up. Pinning the hook to a release
+    at least that old guarantees its minor's ``.0``, the floor, is too.
     """
     uploads = released_uv_builds()
     if not uploads:

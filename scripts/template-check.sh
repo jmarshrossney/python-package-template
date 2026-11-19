@@ -117,3 +117,10 @@ uv run --isolated --no-project --with dist/*.whl python -c "import demo_pkg"
 if [ "$variant" != "minimal" ]; then
     uv run --isolated --no-project --with dist/*.whl demo-pkg --help
 fi
+# Last, because it rewrites pins and relocks. Cutoff lifted as in CI.
+if [ "$variant" = "full" ]; then
+    UV_EXCLUDE_NEWER="$(date -u +%F)" uv run just bump
+    v=$(uv self version --short)
+    grep -q "rev: $v$" .pre-commit-config.yaml
+    grep -q "uv_build>=${v%.*}.0,<" pyproject.toml
+fi

@@ -2,7 +2,7 @@
 # requires-python = ">=3.13"
 # dependencies = ["packaging>=25.0"]
 # ///
-"""Assert uv_build and the uv-pre-commit hook name the same uv release.
+"""Assert the uv_build range is the whole minor of the uv-pre-commit hook.
 
 `bump` derives one from the other, so this only fires on a hand edit that
 changed a single side. CI runs it.
@@ -20,17 +20,19 @@ def main():
     except uv_pins.PinError as error:
         sys.exit(f"error: {error}")
 
-    expected_high = uv_pins.cap_for(low)
+    expected_low = uv_pins.floor_for(hook)
+    expected_high = uv_pins.cap_for(hook)
 
     problems = []
-    if low != hook:
+    if low != expected_low:
         problems.append(
-            f"uv_build lower bound is {low}, but the uv-pre-commit rev is {hook}"
+            f"uv_build lower bound is {low}, expected {expected_low} "
+            f"(the minor of the uv-pre-commit rev, {hook})"
         )
     if high != expected_high:
         problems.append(
             f"uv_build upper bound is {high}, expected {expected_high} "
-            f"(one minor above {low})"
+            f"(the minor after the uv-pre-commit rev, {hook})"
         )
 
     if problems:
@@ -38,7 +40,7 @@ def main():
             print(f"error: {problem}", file=sys.stderr)
         sys.exit("run `just bump`, or fix template/pyproject.toml.jinja by hand")
 
-    print(f"ok: uv {low}, capped below {high}")
+    print(f"ok: uv {hook}, uv_build >={low},<{high}")
 
 
 if __name__ == "__main__":

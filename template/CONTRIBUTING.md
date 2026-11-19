@@ -32,6 +32,7 @@ or individually:
 | `just doctest` | Run the doctest examples in `src/` |
 | `just docs` | Export the example notebooks, then `zensical build` |
 | `just docs-serve` | The same, with a live-reloading local server |
+| `just bump` | Pin the uv hook and `uv_build` to the installed uv, update the ruff and pyright hooks, relock |
 
 The recipes call tools installed in the project's virtual environment, so prefix each command with `uv run`, e.g. `uv run just test`, unless that environment is activated (for example by direnv).
 

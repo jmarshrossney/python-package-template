@@ -2,7 +2,12 @@
 _:
   @just lint typecheck test check-examples docs
 
-# Format and lint the package using ruff, and lint the examples using marimo.
+# Order matters: `marimo check --fix` prunes cell return tuples, which can
+# strand an import, so it must run before `ruff check --fix` reports the F401;
+# the reverse order needs two passes. Without `--strict`, `marimo check` exits 0
+# on runtime, formatting and WASM findings and fails only on a broken
+# dependency graph.
+[doc('Format and lint the package using ruff, and lint the examples using marimo.')]
 [group('check')]
 lint:
   ruff format
@@ -17,13 +22,17 @@ lint-check:
   ruff check
   marimo check --strict examples/
 
-# Assert the example notebooks are in marimo's canonical form.
+# The only gate for non-canonical cell signatures: `marimo check` reports
+# nothing about them.
+[doc("Assert the example notebooks are in marimo's canonical form.")]
 [group('check')]
 check-canonical:
   marimo check --fix examples/
   git diff --exit-code examples/
 
-# Confirm the example notebooks actually run.
+# The only execution gate: `marimo-md-export` in `docs` prints an error but
+# exits 0 when a cell raises.
+[doc('Confirm the example notebooks actually run.')]
 [group('check')]
 check-examples:
   python examples/notebook.py
@@ -63,6 +72,33 @@ docs-examples:
 [group('docs')]
 docs-serve: docs-examples
   zensical serve
+
+# Pin the uv hook and uv_build to the installed uv, update the other hooks, relock.
+[group('maintain')]
+bump:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  v=$(uv self version --short)
+  IFS=. read -r major minor _ <<< "$v"
+  floor="$major.$minor.0"
+  cap="$major.$((minor + 1)).0"
+  pre-commit autoupdate \
+    --repo https://github.com/astral-sh/ruff-pre-commit \
+    --repo https://github.com/RobertCraigie/pyright-python
+  sed -i.bak -E "/astral-sh\/uv-pre-commit/,/rev:/ s/(rev:[[:space:]]*)v?[0-9.]+/\1$v/" \
+    .pre-commit-config.yaml
+  sed -i.bak -E "s/uv_build>=[0-9.]+,<[0-9.]+/uv_build>=$floor,<$cap/" pyproject.toml
+  rm .pre-commit-config.yaml.bak pyproject.toml.bak
+  grep -q "rev: $v$" .pre-commit-config.yaml \
+    || { echo "uv-pre-commit rev not rewritten in .pre-commit-config.yaml" >&2; exit 1; }
+  grep -q "uv_build>=$floor,<$cap" pyproject.toml \
+    || { echo "uv_build requirement not rewritten in pyproject.toml" >&2; exit 1; }
+  uv lock
+  # A uv inside the range builds with its own backend and skips resolving
+  # uv_build; forcing PEP 517 checks what other frontends and uv versions see.
+  uv build --force-pep517 --wheel --out-dir "$(mktemp -d)" >/dev/null \
+    || { echo "uv_build>=$floor is not installable; it may be newer than the exclude-newer cutoff" >&2; exit 1; }
+  git --no-pager diff --stat
 {%- if release != 'none' %}
 
 # Tag the pyproject.toml version and publish it as a GitHub release{% if release == 'pypi' %} and to PyPI{% endif %}.
