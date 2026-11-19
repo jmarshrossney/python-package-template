@@ -23,6 +23,15 @@ check-versions:
 bump:
     @scripts/bump.sh
 
+# Print the latest release tag, which Copier serves, and how far HEAD is past it.
+version:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    tag=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+    n=$(git rev-list --count "$tag"..HEAD)
+    echo "$tag"
+    [ "$n" -eq 0 ] || echo "HEAD is $n commit(s) past $tag, unreleased"
+
 # Tag a release and push it.
 release version:
     @scripts/release.sh {{ version }}
