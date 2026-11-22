@@ -33,7 +33,7 @@ jobs:
       # `docs` does not include rust-just, so install `just` separately here.
       - uses: extractions/setup-just@v4
       - run: uv sync --group docs --locked
-      - run: uv run just docs
+      - run: uv run just docs-examples docs
       - uses: actions/upload-pages-artifact@v4
         if: github.event_name != 'pull_request' && !github.event.release.prerelease
         with:
