@@ -24,9 +24,9 @@ repos:
         args: [ --fix ]
 
   - repo: https://github.com/jmarshrossney/desphinx
-    # Untagged; pinned to a commit.
-    rev: 4137ea2938abee8d2ada8b3256b316242305fca3
+    rev: v0.1.0
     hooks:
       # Rewrite reST/Sphinx markup in docstrings and comments as Markdown.
+      # The style must match `docstring_style` in zensical.toml.
       - id: desphinx
-        args: [ --fix ]
+        args: [ --fix, --docstring-style, google ]
