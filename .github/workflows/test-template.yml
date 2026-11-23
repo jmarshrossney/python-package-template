@@ -92,12 +92,12 @@ jobs:
             fail=1
           fi
 
-          # The template owner's name. Exactly one occurrence is legitimate:
-          # the marimo-md-export URL, a real third-party link. Rewriting that
-          # to a nonexistent URL is the bug the old bootstrap.py had, so this
+          # The template owner's name. Only the marimo-md-export and desphinx
+          # URLs are legitimate: real third-party links. Rewriting those to
+          # nonexistent URLs is the bug the old bootstrap.py had, so this
           # check is deliberately narrow rather than a blanket exclusion.
           if grep -rn 'jmarshrossney' . --exclude-dir=.git --exclude=uv.lock \
-              | grep -v 'jmarshrossney/marimo-md-export'; then
+              | grep -Ev 'jmarshrossney/(marimo-md-export|desphinx)'; then
             echo "::error::template owner leaked into generated project"
             fail=1
           fi

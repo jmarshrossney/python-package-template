@@ -105,7 +105,8 @@ bump:
   cap="$major.$((minor + 1)).0"
   pre-commit autoupdate \
     --repo https://github.com/astral-sh/ruff-pre-commit \
-    --repo https://github.com/RobertCraigie/pyright-python
+    --repo https://github.com/RobertCraigie/pyright-python \
+    --repo https://github.com/jmarshrossney/desphinx
   sed -i.bak -E "/astral-sh\/uv-pre-commit/,/rev:/ s/(rev:[[:space:]]*)v?[0-9.]+/\1$v/" \
     .pre-commit-config.yaml
   sed -i.bak -E "s/uv_build>=[0-9.]+,<[0-9.]+/uv_build>=$floor,<$cap/" pyproject.toml

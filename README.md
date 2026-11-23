@@ -95,7 +95,7 @@ copier update
 | [zensical](https://zensical.org/) | Documentation site | `zensical.toml` |
 | [mkdocstrings](https://mkdocstrings.github.io/) | API reference from docstrings | `zensical.toml` |
 | [marimo](https://marimo.io/) + [marimo-md-export](https://github.com/jmarshrossney/marimo-md-export) | Executable example notebooks in the docs | `examples/` |
-| [pre-commit](https://pre-commit.com/) | uv-lock, ruff, pyright on commit | `.pre-commit-config.yaml` |
+| [pre-commit](https://pre-commit.com/) | uv-lock, ruff, pyright, [desphinx](https://github.com/jmarshrossney/desphinx) on commit | `.pre-commit-config.yaml` |
 | GitHub Actions | CI, Pages deploy, PyPI publish | `.github/workflows/` |
 
 

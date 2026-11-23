@@ -67,7 +67,7 @@ What does go stale is short, and none of it is weekly:
 | Thing | Where | Cadence |
 |---|---|---|
 | `uv_build` range | `template/pyproject.toml.jinja` `[build-system]` | per uv minor |
-| `rev:` pins | `template/.pre-commit-config.yaml` | per release of uv, ruff, pyright |
+| `rev:` pins | `template/.pre-commit-config.yaml` | per release of uv, ruff, pyright, desphinx |
 | Action versions | root and `template/.github/workflows/` | per major |
 | `requires-python`, classifiers, `.python-version`, CI matrices | several | per Python release |
 

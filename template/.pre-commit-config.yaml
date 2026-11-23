@@ -22,3 +22,11 @@ repos:
       # Run the linter.
       - id: ruff-check
         args: [ --fix ]
+
+  - repo: https://github.com/jmarshrossney/desphinx
+    # Untagged; pinned to a commit.
+    rev: 4137ea2938abee8d2ada8b3256b316242305fca3
+    hooks:
+      # Rewrite reST/Sphinx markup in docstrings and comments as Markdown.
+      - id: desphinx
+        args: [ --fix ]
