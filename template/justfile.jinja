@@ -1,4 +1,4 @@
-# Run the full check suite: lint, typecheck, test, run examples, docs.
+# Run the quick check suite: lint, typecheck, test, run examples, docs (without re-exporting the notebooks).
 _:
   @just lint typecheck test check-examples docs
 
@@ -57,20 +57,41 @@ test-cov:
 doctest:
   pytest --doctest-modules src/{{ package_name }}
 
-# Export the example notebooks, then build the documentation using Zensical.
+# Build the documentation using Zensical. Does not re-export the notebooks.
 [group('docs')]
-docs: docs-examples
+docs:
   zensical build
 
-# Export the example notebooks to markdown with their rendered outputs.
+# Notebooks are named by stem (`notebook`) or path (`examples/notebook.py`);
+# each `examples/<stem>.py` is written to `docs/examples/<stem>.md`.
+[doc('Export example notebooks to markdown with their rendered outputs. args: notebook names, all if none')]
 [group('docs')]
-docs-examples:
-  marimo-md-export examples/notebook.py docs/example.md
-  ruff format examples/  # override marimo's reformatting
+[positional-arguments]
+docs-examples *notebooks:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  shopt -s nullglob
+  names=("$@")
+  if [[ $# -eq 0 ]]; then
+    names=(examples/*.py)
+  fi
+  paths=()
+  for n in "${names[@]}"; do
+    n=$(basename "$n" .py)
+    if [[ ! -f examples/$n.py ]]; then
+      echo "no notebook examples/$n.py; available:" $(basename -s .py examples/*.py) >&2
+      exit 1
+    fi
+    paths+=("examples/$n.py")
+  done
+  for p in "${paths[@]}"; do
+    marimo-md-export "$p" "docs/examples/$(basename "$p" .py).md"
+  done
+  ruff format "${paths[@]}"  # override marimo's reformatting
 
-# Serve the documentation locally with live reload.
+# Serve the documentation locally with live reload. Does not re-export the notebooks.
 [group('docs')]
-docs-serve: docs-examples
+docs-serve:
   zensical serve
 
 # Pin the uv hook and uv_build to the installed uv, update the other hooks, relock.

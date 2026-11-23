@@ -282,6 +282,8 @@ jobs:
           uv sync --group docs
           # `uv run`, not bare `just`: the recipes call marimo-md-export and
           # zensical, which are only on PATH inside the project venv.
+          # Two calls: `docs-examples` takes notebook names, so it would read `docs` as one.
+          uv run just docs-examples
           uv run just docs
 
       - uses: actions/upload-pages-artifact@v4
