@@ -70,7 +70,7 @@ if grep -rn 'python_package_template\|python-package-template' . \
     fail=1
 fi
 if grep -rn 'jmarshrossney' . --exclude-dir=.git --exclude=uv.lock \
-    | grep -v 'jmarshrossney/marimo-md-export'; then
+    | grep -Ev 'jmarshrossney/(marimo-md-export|desphinx)'; then
     echo "error: template owner leaked into generated project" >&2
     fail=1
 fi

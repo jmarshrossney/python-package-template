@@ -79,10 +79,11 @@ uv (packaging), just (tasks), ruff (format + lint), pyright (types), pytest (tes
 
 - Ruff `select` is explicit, never left to defaults — see the comment in `pyproject.toml`.
 - Docstrings are required in `src/` (google convention) and exempt in `tests/` and `examples/`.
+- Docstrings and comments are Markdown, rendered by mkdocstrings, never reST/Sphinx; the desphinx pre-commit hook enforces this.
 - `docs/examples/` is **generated**; edit `examples/notebook.py` instead.
 - `docs-examples` reads every word after it as a notebook name, so `just docs-examples docs` fails with `no notebook examples/docs.py`; run `just docs-examples && just docs`.
 - The uv-pre-commit rev and the `uv_build` range in `[build-system]` must stay in step: the range is the rev's whole minor, `>=X.Y.0,<X.(Y+1).0`.
-  `just bump` sets both from the installed uv after `uv self update`, updates the ruff and pyright hooks, relocks, and checks that `uv_build` still resolves under `exclude-newer`.
+  `just bump` sets both from the installed uv after `uv self update`, updates the ruff, pyright and desphinx hooks, relocks, and checks that `uv_build` still resolves under `exclude-newer`.
   The `[dependency-groups]` bounds are floors and are not bumped; see the comment above them.
 
 ## This project was generated from a template

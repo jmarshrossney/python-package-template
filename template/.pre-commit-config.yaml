@@ -22,3 +22,11 @@ repos:
       # Run the linter.
       - id: ruff-check
         args: [ --fix ]
+
+  - repo: https://github.com/jmarshrossney/desphinx
+    rev: v0.1.0
+    hooks:
+      # Rewrite reST/Sphinx markup in docstrings and comments as Markdown.
+      # The style must match `docstring_style` in zensical.toml.
+      - id: desphinx
+        args: [ --fix, --docstring-style, google ]
